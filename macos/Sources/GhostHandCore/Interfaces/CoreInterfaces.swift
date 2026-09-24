@@ -63,6 +63,7 @@ public protocol RiskPolicy {
 }
 
 public protocol ConfirmationPrompt: AnyObject {
+    /// Must return `false` promptly when the calling task is cancelled, so the kill switch is never blocked by a dialog.
     func requestConfirmation(
         decision: AgentDecision,
         target: AccessibilityElement?,

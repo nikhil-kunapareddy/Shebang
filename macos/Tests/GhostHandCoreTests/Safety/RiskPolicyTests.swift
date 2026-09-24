@@ -210,7 +210,9 @@ import Testing
     @Test func optionDefaults_matchJarvisMode() {
         let options = RiskPolicyOptions()
         #expect(options.sensitiveVerbs.isEmpty)
-        #expect(options.prohibitedTerms == ["delete", "deletion", "erase", "wipe", "destroy", "truncate", "format", "del"])
+        // Windows terms plus the macOS deletion vocabulary.
+        #expect(options.prohibitedTerms.isSuperset(of: ["delete", "deletion", "erase", "wipe", "destroy", "truncate", "format", "del"]))
+        #expect(options.prohibitedTerms.isSuperset(of: ["rm", "rmdir", "empty trash", "move to trash", "erasedisk"]))
         #expect(options.escalateOnRiskScore == .irreversibleOrExternalEffect)
         #expect(!options.requireConfirmationOnSensitiveText)
         #expect(options.denyListedApps.contains("com.apple.keychainaccess"))

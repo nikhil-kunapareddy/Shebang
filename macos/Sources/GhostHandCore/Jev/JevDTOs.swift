@@ -138,9 +138,11 @@ public struct EvaluateResponse: Decodable, Sendable, Equatable {
         additionalData = object.extras(excluding: ["answers", "usage", "providerMetadata"])
     }
 
-    /// `{"probability": p}`; true when p >= 0.5.
+    /// `{"probability": p}`; true when p >= 0.5. Probabilities outside [0, 1] are treated as unparseable.
     public func booleanAnswer(_ questionName: String) -> BooleanAnswer? {
-        guard let probability = answers[questionName]?["probability"]?.doubleValue else { return nil }
+        guard let probability = answers[questionName]?["probability"]?.doubleValue,
+              Self.isProbability(probability)
+        else { return nil }
         return BooleanAnswer(probability: probability, isTrue: probability >= 0.5)
     }
 
@@ -148,9 +150,19 @@ public struct EvaluateResponse: Decodable, Sendable, Equatable {
     public func choiceAnswer(_ questionName: String) -> ChoiceAnswer? {
         guard let answer = answers[questionName]?.objectValue else { return nil }
         let choice = answer["choice"]?.stringValue ?? ""
-        let probabilities = (answer["probabilities"]?.objectValue ?? [:]).compactMapValues(\.doubleValue)
+        let probabilities = (answer["probabilities"]?.objectValue ?? [:])
+            .compactMapValues(\.doubleValue)
+            .filter { Self.isProbability($0.value) }
         guard !choice.isEmpty else { return nil }
-        return ChoiceAnswer(choice: choice, confidence: probabilities[choice] ?? 0, probabilities: probabilities)
+        // Offered keys are matched case-insensitively later, so look the confidence up the same way.
+        let confidence = probabilities[choice]
+            ?? probabilities.first { $0.key.caseInsensitiveCompare(choice) == .orderedSame }?.value
+            ?? 0
+        return ChoiceAnswer(choice: choice, confidence: confidence, probabilities: probabilities)
+    }
+
+    private static func isProbability(_ value: Double) -> Bool {
+        value.isFinite && (0...1).contains(value)
     }
 
     /// `{"score": n, "probabilities": [p0, p1, ...]}`. Present whenever the answer object exists

@@ -13,6 +13,18 @@ public struct RiskPolicyOptions: Sendable, Equatable {
         "truncate",
         "format",
         "del", // command-line deletion shorthand
+        // macOS equivalents: shell removal, Finder's Trash, and diskutil erase verbs.
+        "rm",
+        "rmdir",
+        "unlink",
+        "shred",
+        "srm",
+        "move to trash",
+        "empty trash",
+        "move to bin",
+        "empty bin",
+        "erasedisk",
+        "erasevolume",
     ]
 
     /// Password managers that are never automated, matched against the app name or bundle identifier.

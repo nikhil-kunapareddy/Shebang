@@ -427,7 +427,7 @@ public final class JevDecisionModel: DecisionModel {
     }
 
     private static func percent(_ value: Double) -> String {
-        "\(Int((value * 100).rounded()))%"
+        String(format: "%.0f%%", value * 100)
     }
 }
 

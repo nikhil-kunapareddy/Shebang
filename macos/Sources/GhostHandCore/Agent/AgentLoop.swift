@@ -44,6 +44,14 @@ public final class AgentLoop {
 
     /// Returns `.cancelled` when the calling task is cancelled; never throws.
     public func run(goal: String, target: AppTarget) async -> AgentRunResult {
+        let result = await runSteps(goal: goal, target: target)
+        // Cancellation can land during a call that returns normally (a failed action, AskUser).
+        guard Task.isCancelled, result.status != .cancelled else { return result }
+        notify("Run cancelled by user.")
+        return .cancelled(steps: result.stepsCompleted, history: result.actionHistory)
+    }
+
+    private func runSteps(goal: String, target: AppTarget) async -> AgentRunResult {
         var currentTarget = target
         var history: [String] = []
         var loopGuard = LoopGuard(maxConsecutiveStalls: options.maxConsecutiveStalls)
@@ -191,7 +199,9 @@ public final class AgentLoop {
                 }
 
                 // 10. OpenApp / OpenUrl moved us to a different app or window.
-                if let newTarget = result.newTarget {
+                // Re-opening the app or URL already in front is not progress, so it must not reset the loop guard.
+                if let newTarget = result.newTarget,
+                   newTarget.processId != currentTarget.processId || newTarget.windowNumber != currentTarget.windowNumber {
                     let oldName = currentTarget.processName
                     Log.agent.info(
                         "Target switched from '\(oldName, privacy: .public)' to '\(newTarget.processName, privacy: .public)'")
