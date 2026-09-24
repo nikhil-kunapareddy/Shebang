@@ -17,3 +17,8 @@ obj/
 CLAUDE.md
 AGENTS.md
 docs/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+*.app
