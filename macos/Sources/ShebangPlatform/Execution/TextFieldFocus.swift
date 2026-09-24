@@ -1,7 +1,7 @@
 import Foundation
 
 /// Confirms keyboard focus before typing. Tree snapshots may omit AXFocused and composite fields can give
-/// focus to an inner editor, so the app's focused element is queried directly (ported from the original app).
+/// focus to an inner editor, so the app's focused element is queried directly.
 enum TextFieldFocus {
     enum Failure: String, Error, LocalizedError {
         case unavailable = "field_focus_unconfirmed"

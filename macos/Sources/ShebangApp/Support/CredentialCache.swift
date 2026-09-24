@@ -2,7 +2,7 @@ import Foundation
 import ShebangCore
 
 /// Keeps the API key in memory after one read at launch: a Keychain access prompt raised while handling the hotkey
-/// would steal focus from the target app (lesson from the original macOS app).
+/// would steal focus from the target app.
 @MainActor
 final class CredentialCache {
     enum Source: Equatable {

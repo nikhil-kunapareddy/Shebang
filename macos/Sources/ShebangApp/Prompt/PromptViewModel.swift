@@ -1,8 +1,8 @@
 import AppKit
 import ShebangCore
 
-/// State of the goal prompt (port of PromptPopupWindow.xaml.cs): goal text, status line, and voice input with live
-/// partial transcripts. A finished transcript auto-submits after a short pause, as on Windows.
+/// State of the goal prompt: goal text, status line, and voice input with live partial transcripts. A finished
+/// transcript auto-submits after a short pause.
 @MainActor
 final class PromptViewModel: ObservableObject {
     static let idleHint = "Return to run · Esc to cancel"

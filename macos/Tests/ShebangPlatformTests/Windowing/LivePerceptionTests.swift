@@ -17,7 +17,7 @@ struct LivePerceptionTests {
         #expect(tracker.activeTarget(current: target) != nil)
     }
 
-    // RD01 equivalent against a real window: controls come back with roles/labels, ids resolve, no secure fields.
+    // Against a real window: controls come back with roles/labels, ids resolve, no secure fields.
     @Test(.enabled(if: AXIsProcessTrusted(), "Accessibility permission required"))
     func readsTheFrontmostWindowTree() async throws {
         let target = try #require(FrontmostWindowTracker().captureFrontmost())

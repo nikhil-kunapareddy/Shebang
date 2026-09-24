@@ -39,7 +39,7 @@ private final class InMemoryKeychainBackend: KeychainBackend {
         KeychainCredentialStore(service: service, account: account, environment: environment, backend: backend)
     }
 
-    @Test func SP02_roundTrip_saveAndRetrieve() throws {
+    @Test func roundTrip_saveAndRetrieve() throws {
         let store = makeStore()
         let key = "vck_test_roundtrip_" + UUID().uuidString
         try store.setAPIKey(key)
@@ -52,7 +52,7 @@ private final class InMemoryKeychainBackend: KeychainBackend {
         #expect(!store.hasKey)
     }
 
-    @Test func SP02_environmentVariable_takesPrecedenceOverKeychain() throws {
+    @Test func environmentVariable_takesPrecedenceOverKeychain() throws {
         let envKey = "vck_env_override_" + UUID().uuidString
         let store = makeStore(environment: ["AI_GATEWAY_API_KEY": envKey])
         try store.setAPIKey("vck_cred_manager_" + UUID().uuidString)

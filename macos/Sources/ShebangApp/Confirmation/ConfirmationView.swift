@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Human-approval panel for sensitive actions (port of ConfirmationDialog.xaml).
+/// Human-approval panel for sensitive actions.
 struct ConfirmationView: View {
     static let width: CGFloat = 480
 

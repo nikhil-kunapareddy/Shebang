@@ -2,7 +2,7 @@ import Foundation
 import Testing
 @testable import ShebangApp
 
-@Suite struct AppSmokeTests {
+@Suite struct InfoPlistTests {
     private var infoPlist: [String: Any] {
         get throws {
             let url = URL(fileURLWithPath: #filePath)

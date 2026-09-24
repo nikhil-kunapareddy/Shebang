@@ -16,7 +16,7 @@ struct RunHooks: Sendable {
     var onTargetChanged: @Sendable (AppTarget) -> Void
 }
 
-/// Builds the perception/decision/execution stack for a run and drives the loop (port of `OnTaskSubmitted` in App.xaml.cs).
+/// Builds the perception/decision/execution stack for a run and drives the loop.
 /// Nonisolated, so the loop and the objects it owns live off the main actor; cancel the calling task to stop the run.
 enum AgentRunner {
     static func run(

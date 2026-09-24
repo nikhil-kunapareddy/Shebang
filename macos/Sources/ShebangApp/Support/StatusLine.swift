@@ -26,7 +26,7 @@ enum TargetFormatting {
         return "Target: " + appDescription(target)
     }
 
-    /// `Safari — “Apple”` (the Windows build's `{ProcessName} — "{WindowTitle}"`).
+    /// `Safari — “Apple”`, or just the app name when the title is empty or repeats it.
     static func appDescription(_ target: AppTarget) -> String {
         let title = target.windowTitle.trimmed
         guard !title.isEmpty, title != target.processName else { return target.processName }

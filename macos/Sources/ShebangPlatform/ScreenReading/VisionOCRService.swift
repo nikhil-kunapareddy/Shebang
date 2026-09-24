@@ -36,19 +36,6 @@ public enum VisionGeometry {
         )
     }
 
-    /// A rect in captured-image pixels (top-left origin, e.g. a 2× Retina capture) → global points.
-    public static func screenRect(forPixelRect rect: CGRect, imageSize: CGSize, in windowFrame: CGRect) -> CGRect {
-        guard imageSize.width > 0, imageSize.height > 0 else { return .zero }
-        let scaleX = windowFrame.width / imageSize.width
-        let scaleY = windowFrame.height / imageSize.height
-        return CGRect(
-            x: windowFrame.minX + rect.minX * scaleX,
-            y: windowFrame.minY + rect.minY * scaleY,
-            width: rect.width * scaleX,
-            height: rect.height * scaleY
-        )
-    }
-
     /// Capture size in pixels for a window of `size` points at `scale` pixels/point, capped at `maxPixels`
     /// on the longest side to bound OCR time and memory.
     public static func captureSize(for size: CGSize, scale: CGFloat, maxPixels: CGFloat = 4096) -> (width: Int, height: Int) {
@@ -74,11 +61,11 @@ enum OCRMerging {
     }
 }
 
-/// ScreenCaptureKit window capture + on-device `VNRecognizeTextRequest` (port of `WindowsOcrService`).
+/// ScreenCaptureKit window capture + on-device `VNRecognizeTextRequest`.
 public final class VisionOCRService: OCRService, @unchecked Sendable {
-    public var minimumConfidence: Float = 0.5
-    public var captureTimeout: TimeInterval = 5
-    public var maxObservations = 500
+    private let minimumConfidence: Float = 0.5
+    private let captureTimeout: TimeInterval = 5
+    private let maxObservations = 500
 
     public init() {}
 

@@ -8,7 +8,7 @@ import Speech
 /// TCC permission checks and prompts. Every call is safe without the permission: checks return
 /// false, and prompts that would crash a process lacking the Info.plist usage string are skipped.
 public enum Permissions {
-    public enum Pane: CaseIterable, Sendable {
+    public enum Pane: Sendable {
         case accessibility, screenRecording, microphone, speechRecognition
 
         public var settingsURL: URL {
@@ -84,8 +84,8 @@ public enum Permissions {
     }
 
     /// TCC terminates a process that requests a privacy permission without the matching usage string.
-    static func hasUsageDescription(_ key: String, bundle: Bundle = .main) -> Bool {
-        if let text = bundle.object(forInfoDictionaryKey: key) as? String, !text.isEmpty { return true }
+    static func hasUsageDescription(_ key: String) -> Bool {
+        if let text = Bundle.main.object(forInfoDictionaryKey: key) as? String, !text.isEmpty { return true }
         Log.app.error("Missing \(key, privacy: .public) in Info.plist; not requesting the permission")
         return false
     }

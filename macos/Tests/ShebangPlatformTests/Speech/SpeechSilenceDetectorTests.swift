@@ -5,7 +5,7 @@ import Testing
     private let loud: Float = 0.2
     private let quiet: Float = 0.001
 
-    @Test func thresholdsMatchWindowsBuild() {
+    @Test func defaultThresholds() {
         #expect(SpeechSilenceDetector.defaultSilenceDuration == 1.8)
         #expect(SpeechSilenceDetector.defaultRMSThreshold == 0.01)
         #expect(SpeechSilenceDetector.defaultMinRecordingDuration == 0.5)
@@ -70,9 +70,10 @@ import Testing
     }
 
     @Test func rmsOfFloatSamples() {
-        #expect(SpeechSilenceDetector.rms([Float]()) == 0)
-        #expect(SpeechSilenceDetector.rms([0.5, -0.5, 0.5, -0.5]) == 0.5)
-        #expect(abs(SpeechSilenceDetector.rms([1, 0]) - 0.70710678) < 0.0001)
+        func rms(_ samples: [Float]) -> Float { samples.withUnsafeBufferPointer { SpeechSilenceDetector.rms($0) } }
+        #expect(rms([]) == 0)
+        #expect(rms([0.5, -0.5, 0.5, -0.5]) == 0.5)
+        #expect(abs(rms([1, 0]) - 0.70710678) < 0.0001)
     }
 
     @Test func rmsOfPCM16SamplesIsNormalized() {

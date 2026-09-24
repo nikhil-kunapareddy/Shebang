@@ -2,7 +2,7 @@ import Foundation
 import ShebangCore
 
 /// Loop settings for runs started from the app. `AgentLoopOptions.fromEnvironment` defaults to dry-run (like the CLI);
-/// the app acts for real unless `DRY_RUN` is explicitly `true`, matching the Windows app.
+/// the app acts for real unless `DRY_RUN` is explicitly `true`.
 struct RunSettings: Equatable, Sendable {
     static let maxConsecutiveStalls = 15
 

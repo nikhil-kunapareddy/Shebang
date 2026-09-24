@@ -36,23 +36,21 @@ public enum SpeechInputError: Error, LocalizedError, Equatable {
 
 /// Dictation with SFSpeechRecognizer (on-device when supported) fed by an AVAudioEngine input tap.
 /// Recording ends on trailing silence, the 30 s cap, `stopRecording()`, or task cancellation
-/// (which throws `CancellationError`). Non-cancellation failures use `fallback` when provided.
+/// (which throws `CancellationError`).
 public final class AppleSpeechService: SpeechInput {
     private let locale: Locale
-    private let fallback: SpeechInput?
     private let environment: SpeechServiceEnvironment
     private let lock = NSLock()
     private var isBusy = false
     private var stopRequested = false
     private var session: SpeechRecognitionSession?
 
-    public convenience init(locale: Locale = .current, fallback: SpeechInput? = nil) {
-        self.init(locale: locale, fallback: fallback, environment: SystemSpeechEnvironment())
+    public convenience init() {
+        self.init(locale: .current, environment: SystemSpeechEnvironment())
     }
 
-    init(locale: Locale, fallback: SpeechInput?, environment: SpeechServiceEnvironment) {
+    init(locale: Locale, environment: SpeechServiceEnvironment) {
         self.locale = locale
-        self.fallback = fallback
         self.environment = environment
     }
 
@@ -66,10 +64,6 @@ public final class AppleSpeechService: SpeechInput {
         } catch is CancellationError {
             Log.speech.info("Voice recording cancelled")
             throw CancellationError()
-        } catch {
-            guard let fallback else { throw error }
-            Log.speech.warning("Speech recognition unavailable (\(error.localizedDescription, privacy: .public)); using fallback")
-            return try await fallback.transcribe(onPartial: onPartial)
         }
     }
 

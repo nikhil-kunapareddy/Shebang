@@ -14,7 +14,7 @@ enum TextEntryHeuristics {
 
     private static let searchKeywords: Set<String> = ["address", "search", "omnibox", "url", "find", "google", "query", "bar"]
 
-    /// Port of `IsSearchOrAddressBar`: text typed into these is submitted with Return automatically.
+    /// Search and address fields: text typed into these is submitted with Return automatically.
     /// Only the control's own label counts, as whole words. `displayLabel` would fall back to the value,
     /// turning a document that mentions "find" into a search box that gets replaced and submitted.
     static func isSearchOrAddressBar(_ element: AccessibilityElement?) -> Bool {
@@ -24,9 +24,9 @@ enum TextEntryHeuristics {
         return words.contains { searchKeywords.contains(String($0)) }
     }
 
-    /// Multi-line roles (Notes body, Mail compose, TextEdit, web `<textarea>`).
+    /// Multi-line text (Notes body, Mail compose, TextEdit, web `<textarea>`), which AX reports as `AXTextArea`.
     static func isMultiline(role: String) -> Bool {
-        ["axtextarea", "textarea", "document"].contains(role.lowercased())
+        role.lowercased() == "axtextarea"
     }
 
     /// Documents get text appended at the end: replacing their value or select-all + delete would destroy them.

@@ -26,8 +26,8 @@ public enum AppLauncherError: Error, LocalizedError, Equatable {
 /// Parses "open X" / URL intents from goals, resolves app names through LaunchServices and the standard
 /// application folders, launches or re-activates the app, and waits for its window.
 public final class WorkspaceAppLauncher: AppLauncher {
-    /// How long to wait for a launched app to finish launching and show a window (5 s in the Windows build).
-    public var launchTimeout: TimeInterval = 5
+    /// How long to wait for a launched app to finish launching and show a window.
+    static let launchTimeout: TimeInterval = 5
 
     private let directory: ApplicationDirectory
     private let lock = NSLock()
@@ -61,7 +61,7 @@ public final class WorkspaceAppLauncher: AppLauncher {
     private static let trailingAppRegex = launcherRegex(
         #"\b(?:in|using|with|on)\s+([a-zA-Z0-9\-_ ]+?)(?:\s+browser)?\s*[.!]?\s*$"#)
 
-    /// "open notepad", "switch to discord", ... — shares the decision model's parser so both agree.
+    /// "open textedit", "switch to discord", ... — shares the decision model's parser so both agree.
     public static func extractAppLaunchCandidates(_ goal: String) -> [String] {
         JevDecisionModel.extractAppLaunchCandidates(goal)
     }
@@ -159,17 +159,11 @@ public final class WorkspaceAppLauncher: AppLauncher {
 
     // MARK: - Resolution
 
-    /// Generic and Windows-habit names mapped to macOS apps (bundle ids), consulted after exact name matches.
+    /// Short and former names mapped to macOS apps (bundle ids), consulted after exact name matches.
     static let aliases: [String: String] = [
-        "fileexplorer": "com.apple.finder",
-        "explorer": "com.apple.finder",
         "finder": "com.apple.finder",
-        "taskmanager": "com.apple.ActivityMonitor",
-        "notepad": "com.apple.TextEdit",
         "settings": "com.apple.systempreferences",
-        "controlpanel": "com.apple.systempreferences",
         "systempreferences": "com.apple.systempreferences",
-        "calc": "com.apple.calculator",
         "vscode": "com.microsoft.VSCode",
         "chrome": "com.google.Chrome",
         "edge": "com.microsoft.edgemac",
@@ -178,8 +172,6 @@ public final class WorkspaceAppLauncher: AppLauncher {
         "powerpoint": "com.microsoft.Powerpoint",
         "outlook": "com.microsoft.Outlook",
         "teams": "com.microsoft.teams2",
-        "microsoftstore": "com.apple.AppStore",
-        "snippingtool": "com.apple.screenshot.launcher",
     ]
 
     /// Resolves an app name, bundle identifier, or `.app` path to an application bundle URL.
@@ -303,7 +295,7 @@ public final class WorkspaceAppLauncher: AppLauncher {
     // MARK: - Waiting for the launched window
 
     private func waitForTarget(_ app: NSRunningApplication, fallbackName: String) async throws -> AppTarget? {
-        let deadline = Date().addingTimeInterval(launchTimeout)
+        let deadline = Date().addingTimeInterval(Self.launchTimeout)
         while Date() < deadline {
             try Task.checkCancellation()
             if app.isTerminated { return nil }
@@ -313,7 +305,7 @@ public final class WorkspaceAppLauncher: AppLauncher {
             try await Task.sleep(nanoseconds: 150_000_000)
         }
         guard !app.isTerminated else { return nil }
-        Log.app.notice("'\(fallbackName, privacy: .public)' showed no window within \(self.launchTimeout, privacy: .public)s")
+        Log.app.notice("'\(fallbackName, privacy: .public)' showed no window within \(Self.launchTimeout, privacy: .public)s")
         return makeTarget(app, window: LaunchedWindow.front(of: app.processIdentifier), fallbackName: fallbackName)
     }
 

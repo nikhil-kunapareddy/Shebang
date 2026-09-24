@@ -1,7 +1,7 @@
 import AppKit
 import ShebangCore
 
-/// One Shebang per user session (the Windows build used a named mutex).
+/// One Shebang per user session.
 enum SingleInstance {
     static let bundleIdentifier = "com.shebang.mac"
     /// Posted by a second copy so the running one shows its Status & Permissions window.

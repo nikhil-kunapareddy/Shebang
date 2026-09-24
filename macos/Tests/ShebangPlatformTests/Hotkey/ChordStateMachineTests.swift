@@ -1,6 +1,17 @@
 import Testing
 @testable import ShebangPlatform
 
+/// Shorthands for building key events in the hotkey tests.
+extension RawKeyEvent {
+    static func keyDown(_ keyCode: UInt16, isInjected: Bool = false) -> RawKeyEvent {
+        RawKeyEvent(keyCode: keyCode, isKeyUp: false, isInjected: isInjected)
+    }
+
+    static func keyUp(_ keyCode: UInt16, isInjected: Bool = false) -> RawKeyEvent {
+        RawKeyEvent(keyCode: keyCode, isKeyUp: true, isInjected: isInjected)
+    }
+}
+
 private final class ChordCounter {
     var triggers = 0
     var cancels = 0
@@ -27,68 +38,68 @@ private final class ChordCounter {
         events.forEach(machine.processKeyEvent)
     }
 
-    @Test func HK01_controlDownCommandDownCommandUp_firesExactlyOnce() {
+    @Test func controlDownCommandDownCommandUp_firesExactlyOnce() {
         send(.keyDown(control), .keyDown(command), .keyUp(command), .keyUp(control))
         #expect(counter.triggers == 1)
         #expect(counter.cancels == 0)
     }
 
-    @Test func HK01_commandDownControlDownControlUp_firesExactlyOnce() {
+    @Test func commandDownControlDownControlUp_firesExactlyOnce() {
         send(.keyDown(command), .keyDown(control), .keyUp(control), .keyUp(command))
         #expect(counter.triggers == 1)
         #expect(counter.cancels == 0)
     }
 
     @Test(arguments: [UInt16(0x02), 0x0C, 0x31, 0x03]) // D, Q, Space, F
-    func HK02_interveningKey_doesNotFire(key: UInt16) {
+    func interveningKey_doesNotFire(key: UInt16) {
         send(.keyDown(control), .keyDown(command), .keyDown(key), .keyUp(key), .keyUp(command), .keyUp(control))
         #expect(counter.triggers == 0)
         #expect(counter.cancels == 0)
     }
 
-    @Test func HK02_shortcutThenCleanChord_firesOnlyForTheCleanChord() {
+    @Test func shortcutThenCleanChord_firesOnlyForTheCleanChord() {
         send(.keyDown(control), .keyDown(command), .keyDown(keyQ), .keyUp(keyQ), .keyUp(command), .keyUp(control))
         send(.keyDown(control), .keyDown(command), .keyUp(command), .keyUp(control))
         #expect(counter.triggers == 1)
     }
 
-    @Test func HK03_controlAloneOrCommandAlone_doesNotFire() {
+    @Test func controlAloneOrCommandAlone_doesNotFire() {
         send(.keyDown(control), .keyUp(control))
         #expect(counter.triggers == 0)
         send(.keyDown(command), .keyUp(command))
         #expect(counter.triggers == 0)
     }
 
-    @Test func HK04_leftAndRightModifierVariants_bothWork() {
+    @Test func leftAndRightModifierVariants_bothWork() {
         send(.keyDown(rightControl), .keyDown(command), .keyUp(command), .keyUp(rightControl))
         #expect(counter.triggers == 1)
         send(.keyDown(control), .keyDown(rightCommand), .keyUp(rightCommand), .keyUp(control))
         #expect(counter.triggers == 2)
     }
 
-    @Test func HK05_injectedEvents_areIgnored() {
+    @Test func injectedEvents_areIgnored() {
         send(
             .keyDown(control, isInjected: true), .keyDown(command, isInjected: true),
             .keyUp(command, isInjected: true), .keyUp(control, isInjected: true))
         #expect(counter.triggers == 0)
     }
 
-    @Test func HK05_injectedEscapeWhileRunning_isNotAKillSwitch() {
+    @Test func injectedEscapeWhileRunning_isNotAKillSwitch() {
         machine.isRunActive = true
         send(.keyDown(RawKeyEvent.vkEscape, isInjected: true), .keyUp(RawKeyEvent.vkEscape, isInjected: true))
         #expect(counter.cancels == 0)
     }
 
-    @Test func HK06_chordWhileRunActive_emitsCancelNotTrigger() {
+    @Test func chordWhileRunActive_emitsCancelNotTrigger() {
         machine.isRunActive = true
         send(.keyDown(control), .keyDown(command), .keyUp(command), .keyUp(control))
         #expect(counter.triggers == 0)
         #expect(counter.cancels == 1)
     }
 
-    @Test func HK06_escapeWhileRunActive_emitsCancel() {
+    @Test func escapeWhileRunActive_emitsCancel() {
         machine.isRunActive = true
-        send(.keyDown(ChordStateMachine.vkEscape), .keyUp(ChordStateMachine.vkEscape))
+        send(.keyDown(RawKeyEvent.vkEscape), .keyUp(RawKeyEvent.vkEscape))
         #expect(counter.triggers == 0)
         #expect(counter.cancels == 1)
     }
@@ -99,7 +110,7 @@ private final class ChordCounter {
         #expect(counter.cancels == 0)
     }
 
-    @Test func HK07_keyAutoRepeat_doesNotDoubleFire() {
+    @Test func keyAutoRepeat_doesNotDoubleFire() {
         send(.keyDown(control), .keyDown(command), .keyDown(command), .keyDown(command), .keyUp(command), .keyUp(control))
         #expect(counter.triggers == 1)
     }
@@ -160,7 +171,7 @@ private final class ChordCounter {
         machine.onTrigger = { fired += 1 }
         let shiftDown = try #require(RawKeyEvent.fromFlagsChanged(
             keyCode: RawKeyEvent.vkShift, flags: controlDown | commandDown | RawKeyEvent.flagShift))
-        #expect(!shiftDown.isChordModifier)
+        #expect(!shiftDown.isControl && !shiftDown.isCommand)
 
         machine.processKeyEvent(.keyDown(RawKeyEvent.vkControl))
         machine.processKeyEvent(.keyDown(RawKeyEvent.vkCommand))
@@ -174,10 +185,8 @@ private final class ChordCounter {
         #expect(RawKeyEvent.fromFlagsChanged(keyCode: 0x00, flags: controlDown) == nil)
     }
 
-    @Test func injectedFlagAndTimestampArePreserved() throws {
-        let event = try #require(RawKeyEvent.fromFlagsChanged(
-            keyCode: RawKeyEvent.vkCommand, flags: commandDown, isInjected: true, timestampMs: 42))
+    @Test func injectedFlagIsPreserved() throws {
+        let event = try #require(RawKeyEvent.fromFlagsChanged(keyCode: RawKeyEvent.vkCommand, flags: commandDown, isInjected: true))
         #expect(event.isInjected)
-        #expect(event.timestampMs == 42)
     }
 }

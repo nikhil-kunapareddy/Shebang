@@ -76,7 +76,7 @@ enum ScreenGeometry {
     }
 }
 
-/// Dark vibrant rounded background shared by the panels (behind-window blur like the original macOS overlay).
+/// Dark vibrant rounded background shared by the panels, blurring whatever is behind the window.
 struct PanelBackground: View {
     var cornerRadius: CGFloat = 14
 

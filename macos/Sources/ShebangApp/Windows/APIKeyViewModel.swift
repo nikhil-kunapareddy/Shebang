@@ -1,7 +1,7 @@
 import Foundation
 import ShebangCore
 
-/// State of the API key window (port of ApiKeySetupDialog.xaml.cs, plus a connection test).
+/// State of the API key window: entering and saving the key, plus a connection test.
 @MainActor
 final class APIKeyViewModel: ObservableObject {
     enum Reason: Equatable {

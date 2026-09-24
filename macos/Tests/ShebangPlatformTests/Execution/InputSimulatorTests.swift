@@ -73,7 +73,6 @@ import Testing
 
     @Test func multilineDocumentsAndRepeatedTextAreRecognised() {
         #expect(TextEntryHeuristics.isMultiline(role: "AXTextArea"))
-        #expect(TextEntryHeuristics.isMultiline(role: "Document"))
         #expect(!TextEntryHeuristics.isMultiline(role: "AXTextField"))
         #expect(TextEntryHeuristics.isDocument(AccessibilityElement(id: "e1", role: "AXTextArea", label: "Note body")))
         #expect(!TextEntryHeuristics.isDocument(AccessibilityElement(id: "e1", role: "AXTextArea", label: "Search or ask a question")))

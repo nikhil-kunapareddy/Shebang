@@ -14,6 +14,6 @@ import Testing
     }
 
     @Test func missingUsageDescriptionBlocksThePrompt() {
-        #expect(!Permissions.hasUsageDescription("GHNonexistentUsageDescription"))
+        #expect(!Permissions.hasUsageDescription("ShebangNonexistentUsageDescription"))
     }
 }

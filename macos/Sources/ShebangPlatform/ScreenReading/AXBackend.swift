@@ -127,11 +127,7 @@ enum AXDecoding {
 final class LiveAXBackend: AXBackend, @unchecked Sendable {
     static let shared = LiveAXBackend()
 
-    let messagingTimeout: Float
-
-    init(messagingTimeout: Float = 0.5) {
-        self.messagingTimeout = messagingTimeout
-    }
+    let messagingTimeout: Float = 0.5
 
     var isTrusted: Bool { AXIsProcessTrusted() }
 

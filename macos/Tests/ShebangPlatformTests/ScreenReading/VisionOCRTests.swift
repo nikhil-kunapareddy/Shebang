@@ -28,17 +28,6 @@ import Testing
         #expect(rect == CGRect(x: -1920, y: -300, width: 500, height: 400))
     }
 
-    @Test func retinaPixelRectsMapToPoints() {
-        let window = CGRect(x: 100, y: 50, width: 1000, height: 500)
-        let retina = VisionGeometry.screenRect(forPixelRect: CGRect(x: 200, y: 100, width: 400, height: 100),
-                                               imageSize: CGSize(width: 2000, height: 1000), in: window)
-        let standard = VisionGeometry.screenRect(forPixelRect: CGRect(x: 100, y: 50, width: 200, height: 50),
-                                                 imageSize: CGSize(width: 1000, height: 500), in: window)
-        #expect(retina == CGRect(x: 200, y: 100, width: 200, height: 50))
-        #expect(retina == standard)
-        #expect(VisionGeometry.screenRect(forPixelRect: .zero, imageSize: .zero, in: window) == .zero)
-    }
-
     @Test func captureSizeUsesBackingScaleAndCapsLongestSide() {
         #expect(VisionGeometry.captureSize(for: CGSize(width: 1000, height: 800), scale: 2) == (2000, 1600))
         #expect(VisionGeometry.captureSize(for: CGSize(width: 1000, height: 800), scale: 0) == (1000, 800))
@@ -92,7 +81,7 @@ import Testing
         return try #require(context.makeImage())
     }
 
-    // RD06 equivalent: a known bitmap yields text, role, source, and screen-space bounds.
+    // A known bitmap yields text, role, source, and screen-space bounds.
     @Test func recognizesRenderedTextAndMapsToScreen() throws {
         let window = CGRect(x: -1000, y: 200, width: 600, height: 200)
         let results = try VisionOCRService().recognizeText(in: try render("Shebang Test", size: window.size, scale: 1),
