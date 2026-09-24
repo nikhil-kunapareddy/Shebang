@@ -2,24 +2,24 @@
 import PackageDescription
 
 let package = Package(
-    name: "GhostHand",
+    name: "Shebang",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "GhostHandApp", targets: ["GhostHandApp"]),
-        .executable(name: "ghosthand", targets: ["GhostHandCLI"]),
+        .executable(name: "ShebangApp", targets: ["ShebangApp"]),
+        .executable(name: "shebang", targets: ["ShebangCLI"]),
     ],
     targets: [
         // Platform-independent logic: models, Jev client, risk policy, agent loop.
-        .target(name: "GhostHandCore"),
+        .target(name: "ShebangCore"),
         // macOS services: Accessibility, Vision OCR, CGEvent input, Keychain, Speech.
-        .target(name: "GhostHandPlatform", dependencies: ["GhostHandCore"]),
+        .target(name: "ShebangPlatform", dependencies: ["ShebangCore"]),
         // Menu bar app with prompt panel and confirmation dialog.
-        .executableTarget(name: "GhostHandApp", dependencies: ["GhostHandCore", "GhostHandPlatform"]),
-        // `ghosthand check | read | run` developer CLI.
-        .executableTarget(name: "GhostHandCLI", dependencies: ["GhostHandCore", "GhostHandPlatform"]),
-        .testTarget(name: "GhostHandCoreTests", dependencies: ["GhostHandCore"]),
-        .testTarget(name: "GhostHandPlatformTests", dependencies: ["GhostHandPlatform"]),
-        .testTarget(name: "GhostHandAppTests", dependencies: ["GhostHandApp"]),
+        .executableTarget(name: "ShebangApp", dependencies: ["ShebangCore", "ShebangPlatform"]),
+        // `shebang check | read | run` developer CLI.
+        .executableTarget(name: "ShebangCLI", dependencies: ["ShebangCore", "ShebangPlatform"]),
+        .testTarget(name: "ShebangCoreTests", dependencies: ["ShebangCore"]),
+        .testTarget(name: "ShebangPlatformTests", dependencies: ["ShebangPlatform"]),
+        .testTarget(name: "ShebangAppTests", dependencies: ["ShebangApp"]),
     ],
     swiftLanguageModes: [.v5]
 )

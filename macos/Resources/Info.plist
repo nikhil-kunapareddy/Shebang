@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleName</key>
-    <string>GhostHand</string>
+    <string>Shebang</string>
     <key>CFBundleDisplayName</key>
-    <string>GhostHand</string>
+    <string>Shebang</string>
     <key>CFBundleIdentifier</key>
-    <string>com.ghosthand.mac</string>
+    <string>com.shebang.mac</string>
     <key>CFBundleVersion</key>
     <string>0.1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>0.1.0</string>
     <key>CFBundleExecutable</key>
-    <string>GhostHand</string>
+    <string>Shebang</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
@@ -31,11 +31,11 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSAccessibilityUsageDescription</key>
-    <string>GhostHand reads and operates the controls of the app you target so it can carry out your instructions.</string>
+    <string>Shebang reads and operates the controls of the app you target so it can carry out your instructions.</string>
     <key>NSMicrophoneUsageDescription</key>
-    <string>GhostHand listens to your spoken instruction when you press the microphone button.</string>
+    <string>Shebang listens to your spoken instruction when you press the microphone button.</string>
     <key>NSSpeechRecognitionUsageDescription</key>
-    <string>GhostHand transcribes your spoken instruction on this Mac.</string>
+    <string>Shebang transcribes your spoken instruction on this Mac.</string>
     <key>NSHumanReadableCopyright</key>
     <string>MIT License</string>
 </dict>
