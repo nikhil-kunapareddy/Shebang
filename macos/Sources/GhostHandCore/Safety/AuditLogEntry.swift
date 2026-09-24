@@ -10,7 +10,7 @@ public struct AuditLogEntry: Sendable, Equatable, Codable {
     public var targetRole: String?
     public var appProcess: String
     public var appTitle: String
-    /// `"auto"`, `"confirmed"`, `"rejected"`, or `"denied"`.
+    /// `"auto"`, `"confirmed"`, `"rejected"`, `"denied"`, or `"prohibited"`.
     public var decisionType: String
     public var reason: String?
 
