@@ -4,21 +4,15 @@
 !.env.example
 *.log
 *.p12
-*.pfx
 *.key
 
-# Release archives and publish output
+# Swift Package Manager and build output
+.build/
+.swiftpm/
 dist/
-publish/
-bin/
-obj/
+*.app
 *.zip
 
 CLAUDE.md
 AGENTS.md
 docs/
-
-# Swift Package Manager
-.build/
-.swiftpm/
-*.app
