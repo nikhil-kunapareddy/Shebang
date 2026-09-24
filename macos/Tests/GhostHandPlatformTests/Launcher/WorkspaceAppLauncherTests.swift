@@ -171,8 +171,9 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
     @Test func matchScoreOrdering() {
         #expect(WorkspaceAppLauncher.matchScore(query: "safari", name: "Safari") == 100)
         #expect(WorkspaceAppLauncher.matchScore(query: "facetime", name: "Face Time") == 90)
-        #expect(WorkspaceAppLauncher.matchScore(query: "brave", name: "Brave Browser") == 80)
-        #expect(WorkspaceAppLauncher.matchScore(query: "chrome", name: "Google Chrome") == 70)
+        #expect(WorkspaceAppLauncher.matchScore(query: "brave", name: "Brave Browser") == 75)
+        #expect(WorkspaceAppLauncher.matchScore(query: "chrome", name: "Google Chrome") == 65)
+        #expect(WorkspaceAppLauncher.matchScore(query: "chrome", name: "Chrome Remote Desktop Host Uninstaller") == 60)
         #expect(WorkspaceAppLauncher.matchScore(query: "calc", name: "Calculator") == 50)
         #expect(WorkspaceAppLauncher.matchScore(query: "ca", name: "Calculator") == 0)
         #expect(WorkspaceAppLauncher.matchScore(query: "photoshop", name: "Safari") == 0)

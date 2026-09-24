@@ -23,6 +23,8 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
     var scrollLines = 5
     var focusAttempts = 11
     var focusInterval: TimeInterval = 0.1
+    static let activationPolls = 20
+    static let activationPollInterval: TimeInterval = 0.05
 
     public var target: AppTarget {
         lock.withLock { currentTarget }
@@ -106,7 +108,7 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
             default: break
             }
 
-            if let failure = try await prepareForInput() { return failure }
+            if let interruption = try await prepareForInput() { return interruption }
 
             switch decision.operation {
             case .click, .clickText:
@@ -162,18 +164,24 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         var frontmost = workspace.frontmostProcessID()
         if frontmost != target.processId, frontmost == nil || frontmost == workspace.ownProcessID {
             _ = workspace.activate(target)
-            try await clock.sleep(seconds: 0.06)
-            frontmost = workspace.frontmostProcessID()
+            // Activation is asynchronous on macOS; give it up to a second before calling it a focus change.
+            for _ in 0..<Self.activationPolls {
+                try await clock.sleep(seconds: Self.activationPollInterval)
+                frontmost = workspace.frontmostProcessID()
+                if frontmost == target.processId { break }
+            }
         }
         if frontmost == target.processId { return nil }
 
         let found = frontmost ?? 0
-        // Port of the Windows desktop-shell migration: starting from the Finder desktop, follow the app that took focus.
+        // Port of the Windows desktop-shell migration: starting from the Finder desktop, follow the app that took
+        // focus. The action was chosen from the desktop's elements, so hand the new app back to the loop, which
+        // runs its deny-list check and re-reads the screen, instead of acting on stale coordinates.
         if FrontmostWindowTracker.isDesktopOrShell(target), found != 0, found != workspace.ownProcessID,
            let migrated = workspace.describeProcess(found) {
             Log.input.info("Foreground migrated from the desktop to \(migrated.processName, privacy: .public) (PID \(found))")
             retarget(migrated)
-            return nil
+            return .targetChanged(migrated, message: "Focus moved from the desktop to \(migrated.processName); re-reading the screen")
         }
         Log.input.warning("Foreground process changed mid-action: expected PID \(target.processId), found \(found)")
         return .failed(Self.foregroundChangedMessage(expected: target.processId, found: found))
@@ -286,7 +294,7 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
 
         try await prepareCaret(multiline: multiline)
         try await clock.sleep(seconds: 0.03)
-        guard input.typeText(text) else { return Self.inputFailure("keyboard") }
+        guard try typeKeys(text) else { return Self.inputFailure("keyboard") }
         logTyped(text, via: "keyboard", secure: secure)
 
         if submit {
@@ -311,7 +319,7 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         }
         try await prepareCaret(multiline: multiline)
         try await clock.sleep(seconds: 0.03)
-        guard input.typeText(text) else { return Self.inputFailure("keyboard") }
+        guard try typeKeys(text) else { return Self.inputFailure("keyboard") }
         logTyped(text, via: "keyboard (focused control)", secure: secure)
         if submit {
             try await clock.sleep(seconds: 0.06)
@@ -320,16 +328,32 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         return .succeeded(message: "Typed text into focused element")
     }
 
+    /// Types `text`, stopping mid-string on cancellation or when another app takes focus, so the rest of
+    /// the text never lands in the wrong app.
+    private func typeKeys(_ text: String) throws -> Bool {
+        var interruption: Error?
+        let completed = input.typeText(text) {
+            if Task.isCancelled {
+                interruption = CancellationError()
+            } else {
+                do { try checkForeground() } catch { interruption = error }
+            }
+            return interruption == nil
+        }
+        if let interruption { throw interruption }
+        return completed
+    }
+
     /// Single-line fields: select-all + delete (⌃A ⌃K at a terminal prompt) so new text replaces rather than
     /// duplicates. Documents: move the caret to the end (⌘↓) and append, never wiping existing content.
     private func prepareCaret(multiline: Bool) async throws {
         if TextEntryHeuristics.isTerminal(target.bundleIdentifier) {
-            try press(InputSimulator.KeyCode.a, flags: .maskControl)
-            try press(InputSimulator.KeyCode.k, flags: .maskControl)
+            try press(input.keyCode(for: "a"), flags: .maskControl)
+            try press(input.keyCode(for: "k"), flags: .maskControl)
         } else if multiline {
             try press(InputSimulator.KeyCode.downArrow, flags: .maskCommand)
         } else {
-            try press(InputSimulator.KeyCode.a, flags: .maskCommand)
+            try press(input.keyCode(for: "a"), flags: .maskCommand)
             try await clock.sleep(seconds: 0.03)
             try press(InputSimulator.KeyCode.delete, flags: [])
         }

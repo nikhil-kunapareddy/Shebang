@@ -15,9 +15,29 @@ final class FakeInputSink: InputSink, @unchecked Sendable {
 
     private(set) var events: [Event] = []
     var succeeds = true
+    /// Runs before each typed character, e.g. to switch the frontmost app mid-string.
+    var beforeCharacter: ((Int) -> Void)?
+    /// Layout lookups answer with US positions unless overridden (AZERTY puts "a" at 0x0C).
+    var layout: [Character: CGKeyCode] = ["a": 0x00, "k": 0x28]
 
     func click(at point: CGPoint) -> Bool { events.append(.click(point)); return succeeds }
-    func typeText(_ text: String) -> Bool { events.append(.type(text)); return succeeds }
+
+    /// Records the characters typed before `shouldContinue` stopped the string.
+    func typeText(_ text: String, shouldContinue: () -> Bool) -> Bool {
+        var typed = ""
+        for (index, character) in text.enumerated() {
+            beforeCharacter?(index)
+            guard shouldContinue() else {
+                if !typed.isEmpty { events.append(.type(typed)) }
+                return false
+            }
+            typed.append(character)
+        }
+        events.append(.type(typed))
+        return succeeds
+    }
+
+    func keyCode(for character: Character) -> CGKeyCode { layout[character] ?? 0x00 }
     func pressKey(_ keyCode: CGKeyCode, flags: CGEventFlags) -> Bool { events.append(.key(keyCode, flags)); return succeeds }
     func scroll(lines: Int, at point: CGPoint?) -> Bool { events.append(.scroll(lines, point)); return succeeds }
     func pressMediaPlayPause() -> Bool { events.append(.mediaPlayPause); return succeeds }

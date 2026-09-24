@@ -8,7 +8,8 @@ import GhostHandCore
 /// top-left-origin points — the same space as AX frames. Posting requires Accessibility permission;
 /// without it every call logs and returns `false` instead of silently dropping events.
 public enum InputSimulator {
-    /// macOS virtual key codes (Carbon `kVK_*`).
+    /// macOS virtual key codes (Carbon `kVK_*`). Letter codes are US-layout positions: use
+    /// `keyCode(for:)` for shortcuts so they match the user's layout.
     public enum KeyCode {
         public static let a: CGKeyCode = 0x00
         public static let k: CGKeyCode = 0x28
@@ -33,12 +34,24 @@ public enum InputSimulator {
         return true
     }
 
+    /// Key code that types `character` in the user's current layout, falling back to the US position.
+    public static func keyCode(for character: Character) -> CGKeyCode {
+        if let code = KeyboardLayout.keyCode(for: character) { return code }
+        switch character.lowercased() {
+        case "a": return KeyCode.a
+        case "k": return KeyCode.k
+        default: return KeyCode.a
+        }
+    }
+
     /// Types `text` as Unicode keyboard events, one grapheme at a time; the clipboard is never touched.
+    /// `shouldContinue` runs before every character so a kill switch or focus change stops typing at once.
     @discardableResult
-    public static func typeText(_ text: String) -> Bool {
+    public static func typeText(_ text: String, shouldContinue: () -> Bool = { true }) -> Bool {
         guard !text.isEmpty else { return true }
         guard canPost("typeText") else { return false }
         for character in text {
+            guard shouldContinue() else { return false }
             guard let (down, up) = unicodeEvents(for: character) else { return false }
             down.post(tap: .cghidEventTap)
             up.post(tap: .cghidEventTap)

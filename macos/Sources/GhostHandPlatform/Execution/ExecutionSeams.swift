@@ -6,7 +6,10 @@ import GhostHandCore
 /// Synthetic input used by `MacActionExecutor`; faked in tests so they never move the real mouse.
 protocol InputSink: AnyObject {
     func click(at point: CGPoint) -> Bool
-    func typeText(_ text: String) -> Bool
+    /// Stops early, returning false, as soon as `shouldContinue` returns false.
+    func typeText(_ text: String, shouldContinue: () -> Bool) -> Bool
+    /// Key code that types `character` in the user's keyboard layout, for shortcuts like ⌘A.
+    func keyCode(for character: Character) -> CGKeyCode
     func pressKey(_ keyCode: CGKeyCode, flags: CGEventFlags) -> Bool
     func scroll(lines: Int, at point: CGPoint?) -> Bool
     func pressMediaPlayPause() -> Bool
@@ -14,7 +17,10 @@ protocol InputSink: AnyObject {
 
 final class SystemInputSink: InputSink {
     func click(at point: CGPoint) -> Bool { InputSimulator.click(at: point) }
-    func typeText(_ text: String) -> Bool { InputSimulator.typeText(text) }
+    func typeText(_ text: String, shouldContinue: () -> Bool) -> Bool {
+        InputSimulator.typeText(text, shouldContinue: shouldContinue)
+    }
+    func keyCode(for character: Character) -> CGKeyCode { InputSimulator.keyCode(for: character) }
     func pressKey(_ keyCode: CGKeyCode, flags: CGEventFlags) -> Bool { InputSimulator.pressKey(keyCode, flags: flags) }
     func scroll(lines: Int, at point: CGPoint?) -> Bool { InputSimulator.scroll(lines: lines, at: point) }
     func pressMediaPlayPause() -> Bool { InputSimulator.pressMediaPlayPause() }

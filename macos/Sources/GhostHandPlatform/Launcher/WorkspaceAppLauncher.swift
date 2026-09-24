@@ -171,6 +171,13 @@ public final class WorkspaceAppLauncher: AppLauncher {
         "systempreferences": "com.apple.systempreferences",
         "calc": "com.apple.calculator",
         "vscode": "com.microsoft.VSCode",
+        "chrome": "com.google.Chrome",
+        "edge": "com.microsoft.edgemac",
+        "word": "com.microsoft.Word",
+        "excel": "com.microsoft.Excel",
+        "powerpoint": "com.microsoft.Powerpoint",
+        "outlook": "com.microsoft.Outlook",
+        "teams": "com.microsoft.teams2",
         "microsoftstore": "com.apple.AppStore",
         "snippingtool": "com.apple.screenshot.launcher",
     ]
@@ -222,7 +229,9 @@ public final class WorkspaceAppLauncher: AppLauncher {
     static let exactMatchScore = 90
 
     /// Case-insensitive fuzzy name score: 100 exact, 90 ignoring punctuation, 80 leading words,
-    /// 70 all words present, 50 substring, 40 name is a prefix of the query; 0 = no match.
+    /// 70 all words present (both minus 5 per extra word in the name, at most 20), 50 substring,
+    /// 40 name is a prefix of the query; 0 = no match. The penalty keeps "chrome" on Google Chrome
+    /// rather than "Chrome Remote Desktop Host Uninstaller".
     static func matchScore(query: String, name: String) -> Int {
         let q = query.lowercased().trimmingCharacters(in: .whitespaces)
         let n = name.lowercased()
@@ -235,8 +244,9 @@ public final class WorkspaceAppLauncher: AppLauncher {
 
         let queryWords = words(q)
         let nameWords = words(n)
-        if nameWords.starts(with: queryWords) { return 80 }
-        if Set(queryWords).isSubset(of: Set(nameWords)) { return 70 }
+        let extraWordPenalty = min(max(nameWords.count - queryWords.count, 0) * 5, 20)
+        if nameWords.starts(with: queryWords) { return 80 - extraWordPenalty }
+        if Set(queryWords).isSubset(of: Set(nameWords)) { return 70 - extraWordPenalty }
 
         guard qKey.count >= 3 else { return 0 }
         if nKey.contains(qKey) { return 50 }

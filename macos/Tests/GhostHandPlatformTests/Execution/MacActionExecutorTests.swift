@@ -119,10 +119,12 @@ private let fieldFrame = CGRect(x: 200, y: 50, width: 300, height: 24)
         let safari = AppTarget(processId: 555, processName: "Safari", bundleIdentifier: "com.apple.Safari")
         h.workspace.described[555] = safari
 
+        // The action was chosen from the desktop, so the loop re-reads Safari before anything is pressed.
         let result = try await h.run(.pressSpace)
         #expect(result.success)
+        #expect(result.newTarget == safari)
         #expect(h.executor.target == safari)
-        #expect(h.input.events == [.key(0x31, [])])
+        #expect(h.input.events.isEmpty)
     }
 
     @Test func missingAccessibilityPermissionFailsClearly() async throws {

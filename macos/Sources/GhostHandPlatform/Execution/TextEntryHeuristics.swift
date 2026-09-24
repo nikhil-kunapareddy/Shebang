@@ -12,14 +12,16 @@ enum TextEntryHeuristics {
         terminalBundleIdentifiers.contains(bundleIdentifier)
     }
 
-    private static let searchKeywords = ["address", "search", "omnibox", "url", "find", "google", "query", "bar"]
+    private static let searchKeywords: Set<String> = ["address", "search", "omnibox", "url", "find", "google", "query", "bar"]
 
     /// Port of `IsSearchOrAddressBar`: text typed into these is submitted with Return automatically.
+    /// Only the control's own label counts, as whole words. `displayLabel` would fall back to the value,
+    /// turning a document that mentions "find" into a search box that gets replaced and submitted.
     static func isSearchOrAddressBar(_ element: AccessibilityElement?) -> Bool {
         guard let element else { return false }
         if element.role.caseInsensitiveCompare("AXSearchField") == .orderedSame { return true }
-        let label = element.displayLabel.lowercased()
-        return searchKeywords.contains { label.contains($0) }
+        let words = element.label.lowercased().split { !$0.isLetter && !$0.isNumber }
+        return words.contains { searchKeywords.contains(String($0)) }
     }
 
     /// Multi-line roles (Notes body, Mail compose, TextEdit, web `<textarea>`).

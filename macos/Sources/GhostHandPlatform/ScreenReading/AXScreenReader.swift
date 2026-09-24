@@ -130,6 +130,8 @@ public final class AXScreenReader: ScreenReader, @unchecked Sendable {
         guard !alreadyEnabled, isChromiumBased(target) else { return false }
         let manual = ax.setBool("AXManualAccessibility", true, on: app)
         let enhanced = ax.setBool("AXEnhancedUserInterface", true, on: app)
+        // A busy, just-launched app can time out both writes; try again on the next read.
+        guard manual || enhanced else { return false }
         lock.withLock { _ = webAccessibilityEnabledPIDs.insert(target.processId) }
         Log.screen.info("Enabled web accessibility for \(target.processName, privacy: .public) (manual \(manual), enhanced \(enhanced))")
         try await clock.sleep(seconds: webTreeSettleSeconds)
