@@ -33,7 +33,6 @@ import Testing
 
     @Test func otherLoopDefaultsArePreserved() {
         let options = RunSettings.fromEnvironment(["DRY_RUN": "true", "MAX_STEPS_PER_RUN": "3"]).loopOptions
-        #expect(options.actionTimeoutSeconds == AgentLoopOptions().actionTimeoutSeconds)
         #expect(options.escalateOnModelRiskScore == nil)
     }
 }

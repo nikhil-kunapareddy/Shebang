@@ -59,78 +59,6 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
     private let directory = FakeApplicationDirectory()
     private var launcher: WorkspaceAppLauncher { WorkspaceAppLauncher(directory: directory) }
 
-    // MARK: Goal parsing
-
-    @Test(arguments: [
-        ("launch textedit", "textedit"),
-        ("start calculator and calculate 5 + 5", "calculator"),
-        ("open chrome and search for Adele", "chrome"),
-        ("open activity monitor", "activity monitor"),
-        ("open system settings", "system settings"),
-        ("open blender and render", "blender"),
-        ("switch to discord and send message", "discord"),
-    ])
-    func extractAppLaunch_recognizesAppsWithoutHardcoding(goal: String, expected: String) throws {
-        let launch = try #require(launcher.extractAppLaunch(from: goal))
-        #expect(launch.appName.lowercased() == expected)
-    }
-
-    @Test(arguments: [
-        ("switch to discord", "discord"),
-        ("start spotify", "spotify"),
-        ("open vlc", "vlc"),
-        ("launch blender", "blender"),
-    ])
-    func extractAppLaunch_supportsUniversalApps(goal: String, expected: String) throws {
-        let launch = try #require(launcher.extractAppLaunch(from: goal))
-        #expect(launch.appName.lowercased() == expected)
-    }
-
-    @Test func extractAppLaunch_resolvesInstalledAppsToBundlePaths() throws {
-        #expect(launcher.extractAppLaunch(from: "open chrome and search for Adele")?.launchCommand
-            == "/Applications/Google Chrome.app")
-        #expect(launcher.extractAppLaunch(from: "open activity monitor")?.launchCommand
-            == "/System/Applications/Utilities/Activity Monitor.app")
-        // Not installed: the name is kept and resolved again at launch time.
-        #expect(launcher.extractAppLaunch(from: "launch blender")?.launchCommand == "blender")
-    }
-
-    @Test func extractAppLaunch_rejectsUnsafeCandidatesAndNonAppGoals() {
-        #expect(launcher.extractAppLaunch(from: "run bash") == nil)
-        #expect(launcher.extractAppLaunch(from: "open menu") == nil)
-        #expect(launcher.extractAppLaunch(from: "type hello world") == nil)
-    }
-
-    @Test func extractURLLaunch_extractsHttpAndHttpsURLs() {
-        let url = launcher.extractURLLaunch(from: "open https://github.com/nikhil-kunapareddy/Shebang to check release")
-        #expect(url?.absoluteString == "https://github.com/nikhil-kunapareddy/Shebang")
-    }
-
-    @Test func candidates_includeOpenAppWhenPresentInGoal() {
-        #expect(WorkspaceAppLauncher.extractAppLaunchCandidates("open obsidian").contains { $0.lowercased() == "obsidian" })
-        #expect(WorkspaceAppLauncher.extractAppLaunchCandidates("open file").isEmpty)
-        #expect(WorkspaceAppLauncher.extractAppLaunchCandidates("").isEmpty)
-        #expect(launcher.extractURLLaunch(from: "open https://news.ycombinator.com")?.host == "news.ycombinator.com")
-    }
-
-    @Test(arguments: [
-        ("search for Adele on youtube", "youtube.com", "Adele"),
-        ("search for quantum computing on google", "google.com", "quantum"),
-        ("google current weather", "google.com", "weather"),
-        ("open brave and search lion", "google.com", "lion"),
-        ("search about lion", "google.com", "lion"),
-        ("search lion in brave", "google.com", "lion"),
-        ("open github.com", "github.com", ""),
-        ("visit wikipedia.org", "wikipedia.org", ""),
-    ])
-    func extractURLLaunch_synthesizesWebSearchesAndSites(goal: String, host: String, query: String) throws {
-        let url = try #require(launcher.extractURLLaunch(from: goal))
-        #expect(url.host?.contains(host) == true)
-        if !query.isEmpty {
-            #expect(url.query?.contains(query) == true)
-        }
-    }
-
     // MARK: Resolution
 
     @Test(arguments: [
@@ -198,7 +126,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
     ])
     func maliciousCommands_areBlockedBySafetyPolicy(command: String) async {
         do {
-            _ = try await launcher.launchApp(named: "malicious", launchCommand: command)
+            _ = try await launcher.launchApp(named: command)
             Issue.record("Expected '\(command)' to be blocked")
         } catch {
             #expect(error as? AppLauncherError == .blockedBySafetyPolicy(command))
@@ -217,7 +145,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
 
     @Test func unresolvableApp_throwsNotFoundAfterSpotlight() async {
         await #expect(throws: AppLauncherError.applicationNotFound("definitely not installed")) {
-            _ = try await launcher.launchApp(named: "definitely not installed", launchCommand: nil)
+            _ = try await launcher.launchApp(named: "definitely not installed")
         }
         #expect(directory.spotlightQueries == ["definitely not installed"])
     }
@@ -226,7 +154,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
         let launcher = self.launcher
         let task = Task {
             withUnsafeCurrentTask { $0?.cancel() }
-            return try await launcher.launchApp(named: "Safari", launchCommand: nil)
+            return try await launcher.launchApp(named: "Safari")
         }
         await #expect(throws: CancellationError.self) { _ = try await task.value }
     }

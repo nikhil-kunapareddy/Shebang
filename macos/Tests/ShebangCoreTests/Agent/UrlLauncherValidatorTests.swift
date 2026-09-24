@@ -50,4 +50,21 @@ import Testing
     @Test func plainInstructionsProduceNoURL() {
         #expect(UrlLauncherValidator.extractWebURLs("Calculate 450 * 12 + 85").isEmpty)
     }
+
+    @Test(arguments: [
+        ("search for quantum computing on google", "google.com", "quantum"),
+        ("google current weather", "google.com", "weather"),
+        ("open brave and search lion", "google.com", "lion"),
+        ("search about lion", "google.com", "lion"),
+        ("search lion in brave", "google.com", "lion"),
+        ("open github.com", "github.com", ""),
+        ("visit wikipedia.org", "wikipedia.org", ""),
+    ])
+    func synthesizesWebSearchesAndSites(goal: String, host: String, query: String) throws {
+        let url = try #require(UrlLauncherValidator.extractWebURLs(goal).first)
+        #expect(url.host?.contains(host) == true)
+        if !query.isEmpty {
+            #expect(url.query?.contains(query) == true)
+        }
+    }
 }

@@ -58,20 +58,11 @@ public final class KeychainCredentialStore: CredentialStore {
         }
     }
 
-    public var hasKey: Bool {
-        apiKey() != nil
-    }
-
     public func setAPIKey(_ apiKey: String) throws {
         let trimmed = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { throw CredentialStoreError.emptyKey }
         try backend.write(trimmed, service: service, account: account)
         Log.safety.info("API key saved to Keychain")
-    }
-
-    public func deleteAPIKey() throws {
-        try backend.delete(service: service, account: account)
-        Log.safety.info("API key removed from Keychain")
     }
 }
 

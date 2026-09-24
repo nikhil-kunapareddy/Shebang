@@ -45,15 +45,9 @@ final class FakeCredentialStore: CredentialStore {
         return stored
     }
 
-    var hasKey: Bool { stored != nil }
-
     func setAPIKey(_ apiKey: String) throws {
         if let saveError { throw saveError }
         stored = apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    func deleteAPIKey() throws {
-        stored = nil
     }
 }
 

@@ -30,9 +30,9 @@ private struct Harness {
     func register(_ handles: [String: AXUIElement]) { registry.replaceAll(handles) }
 
     func run(_ operation: AgentOperation, _ element: AccessibilityElement? = nil, text: String? = nil,
-             targetId: String? = nil, x: Int? = nil, y: Int? = nil) async throws -> ActionResult {
+             targetId: String? = nil) async throws -> ActionResult {
         let decision = AgentDecision(operation: operation, targetId: targetId ?? element?.id,
-                                     targetLabel: element?.displayLabel, textValue: text, x: x, y: y)
+                                     targetLabel: element?.displayLabel, textValue: text)
         return try await executor.execute(decision, targetElement: element)
     }
 }
@@ -223,14 +223,6 @@ private let fieldFrame = CGRect(x: 200, y: 50, width: 300, height: 24)
         #expect(result.success)
         #expect(h.input.events == [.click(CGPoint(x: 125, y: 210))])
         #expect(h.ax.performedActions.isEmpty)
-    }
-
-    @Test func coordinateClicksMustStayInsideTheTargetWindow() async throws {
-        let h = Harness()
-        #expect(try await h.run(.click, x: 500, y: 400).success)
-        let outside = try await h.run(.click, x: 5000, y: 400)
-        #expect(outside.errorMessage?.contains("outside the target window") == true)
-        #expect(h.input.events == [.click(CGPoint(x: 500, y: 400))])
     }
 
     // MARK: Typing
@@ -456,7 +448,7 @@ private let fieldFrame = CGRect(x: 200, y: 50, width: 300, height: 24)
         #expect(result.success)
         #expect(result.newTarget == safari)
         #expect(result.message == "Launched application 'Safari'")
-        #expect(h.launcher.launchedApps.map(\.name) == ["Safari"])
+        #expect(h.launcher.launchedApps == ["Safari"])
         #expect(h.executor.target == safari)
 
         h.workspace.frontmost = 555

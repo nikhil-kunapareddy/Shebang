@@ -41,15 +41,6 @@ public protocol ActionExecutor: AnyObject {
     func retarget(_ target: AppTarget)
 }
 
-public protocol HotkeyService: AnyObject {
-    /// Called on the main thread when the activation chord fires.
-    var onHotkeyPressed: (() -> Void)? { get set }
-    /// Called on the main thread when the kill switch fires (chord while running, or Esc).
-    var onKillSwitch: (() -> Void)? { get set }
-    func start() throws
-    func stop()
-}
-
 /// Each check returns a human-readable reason when it trips, or `nil` when the action is allowed.
 public protocol RiskPolicy {
     func denialReason(for app: AppTarget) -> String?
@@ -75,9 +66,7 @@ public protocol AuditLog: AnyObject {
 
 public protocol CredentialStore: AnyObject {
     func apiKey() -> String?
-    var hasKey: Bool { get }
     func setAPIKey(_ apiKey: String) throws
-    func deleteAPIKey() throws
 }
 
 public protocol SpeechInput: AnyObject {
@@ -93,7 +82,7 @@ public protocol Clock: Sendable {
 }
 
 public protocol AppLauncher: AnyObject {
-    func launchApp(named appName: String, launchCommand: String?) async throws -> AppTarget?
+    func launchApp(named appName: String) async throws -> AppTarget?
     func launchURL(_ url: URL) async throws -> AppTarget?
 }
 

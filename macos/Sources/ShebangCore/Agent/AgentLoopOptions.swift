@@ -5,8 +5,6 @@ public struct AgentLoopOptions: Sendable, Equatable {
     public var maxSteps: Int
     public var dryRun: Bool
     public var maxConsecutiveStalls: Int
-    /// Not enforced by the loop.
-    public var actionTimeoutSeconds: Int
     /// Jev Call B: when set, Click actions the risk policy allows are scored with `DecisionModel.evaluateActionRisk`
     /// and need confirmation at or above this score. `nil` (the default) skips the call.
     public var escalateOnModelRiskScore: ActionRiskScore?
@@ -15,13 +13,11 @@ public struct AgentLoopOptions: Sendable, Equatable {
         maxSteps: Int = 0,
         dryRun: Bool = true,
         maxConsecutiveStalls: Int = 15,
-        actionTimeoutSeconds: Int = 10,
         escalateOnModelRiskScore: ActionRiskScore? = nil
     ) {
         self.maxSteps = maxSteps
         self.dryRun = dryRun
         self.maxConsecutiveStalls = maxConsecutiveStalls
-        self.actionTimeoutSeconds = actionTimeoutSeconds
         self.escalateOnModelRiskScore = escalateOnModelRiskScore
     }
 

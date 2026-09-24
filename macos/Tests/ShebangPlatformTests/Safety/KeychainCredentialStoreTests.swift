@@ -44,12 +44,7 @@ private final class InMemoryKeychainBackend: KeychainBackend {
         let key = "vck_test_roundtrip_" + UUID().uuidString
         try store.setAPIKey(key)
 
-        #expect(store.hasKey)
         #expect(store.apiKey() == key)
-
-        try store.deleteAPIKey()
-        #expect(store.apiKey() == nil)
-        #expect(!store.hasKey)
     }
 
     @Test func environmentVariable_takesPrecedenceOverKeychain() throws {
@@ -69,14 +64,13 @@ private final class InMemoryKeychainBackend: KeychainBackend {
     @Test func environmentValueIsTrimmed() {
         let store = makeStore(environment: ["AI_GATEWAY_API_KEY": "  vck_env  \n"])
         #expect(store.apiKey() == "vck_env")
-        #expect(store.hasKey)
     }
 
     @Test(arguments: ["", "   ", "\n\t"])
     func emptyKey_isRejected(_ key: String) {
         let store = makeStore()
         #expect(throws: CredentialStoreError.emptyKey) { try store.setAPIKey(key) }
-        #expect(!store.hasKey)
+        #expect(store.apiKey() == nil)
     }
 
     @Test func savedKeyIsTrimmedAndScopedToServiceAndAccount() throws {
@@ -86,15 +80,10 @@ private final class InMemoryKeychainBackend: KeychainBackend {
         #expect(makeStore(service: "com.example.b", account: "KEY").apiKey() == nil)
     }
 
-    @Test func deletingMissingKey_succeeds() throws {
-        try makeStore().deleteAPIKey()
-    }
-
     @Test func keychainReadFailure_returnsNilInsteadOfThrowing() {
         backend.readError = CredentialStoreError.keychain(status: errSecInteractionNotAllowed)
         let store = makeStore()
         #expect(store.apiKey() == nil)
-        #expect(!store.hasKey)
     }
 
     @Test func defaultsMatchContract() {
@@ -106,9 +95,9 @@ private final class InMemoryKeychainBackend: KeychainBackend {
     /// Touches the real login Keychain; run with `SHEBANG_KEYCHAIN_TESTS=1`.
     @Test(.enabled(if: ProcessInfo.processInfo.environment["SHEBANG_KEYCHAIN_TESTS"] == "1"))
     func realKeychainRoundTrip() throws {
-        let store = KeychainCredentialStore(
-            service: "com.shebang.mac.tests.\(UUID().uuidString)", account: "AI_GATEWAY_API_KEY", environment: [:])
-        defer { try? store.deleteAPIKey() }
+        let service = "com.shebang.mac.tests.\(UUID().uuidString)"
+        let store = KeychainCredentialStore(service: service, account: "AI_GATEWAY_API_KEY", environment: [:])
+        defer { try? SecItemKeychainBackend().delete(service: service, account: "AI_GATEWAY_API_KEY") }
 
         let key = "vck_keychain_test_" + UUID().uuidString
         try store.setAPIKey(key)
@@ -116,8 +105,5 @@ private final class InMemoryKeychainBackend: KeychainBackend {
 
         try store.setAPIKey(key + "_updated")
         #expect(store.apiKey() == key + "_updated")
-
-        try store.deleteAPIKey()
-        #expect(store.apiKey() == nil)
     }
 }

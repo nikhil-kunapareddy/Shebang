@@ -63,10 +63,7 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
 
     public func execute(_ decision: AgentDecision, targetElement: AccessibilityElement?) async throws -> ActionResult {
         try Task.checkCancellation()
-        let started = clock.now
-        var result = try await perform(decision, targetElement: targetElement)
-        result.duration = max(0, clock.now.timeIntervalSince(started))
-        return result
+        return try await perform(decision, targetElement: targetElement)
     }
 
     // MARK: - Dispatch
@@ -210,12 +207,6 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         let point: CGPoint
         if frame.width > 0, frame.height > 0 {
             point = CGPoint(x: frame.midX, y: frame.midY)
-        } else if element == nil, let x = decision.x, let y = decision.y {
-            point = CGPoint(x: x, y: y)
-            let bounds = target.windowBounds
-            if !bounds.isEmpty && !bounds.contains(point) {
-                return .failed("Cannot click at (\(x), \(y)): the point is outside the target window.")
-            }
         } else {
             return .failed("Cannot click: target element not found or has empty bounding frame.")
         }
@@ -426,7 +417,7 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         guard let appLauncher else { return .failed("AppLauncher is not configured.") }
         let name = (decision.targetId ?? decision.targetLabel ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return .failed("OpenApp requires an application name.") }
-        guard let newTarget = try await appLauncher.launchApp(named: name, launchCommand: nil) else {
+        guard let newTarget = try await appLauncher.launchApp(named: name) else {
             return .succeeded(message: "Launched application '\(name)'")
         }
         retarget(newTarget)

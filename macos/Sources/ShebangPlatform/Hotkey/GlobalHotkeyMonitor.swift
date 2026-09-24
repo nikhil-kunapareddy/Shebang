@@ -20,7 +20,7 @@ public enum HotkeyError: Error, LocalizedError, Equatable {
 
 /// Listens for the Control+Command chord (and Esc while a run is active) with a CGEventTap on a
 /// dedicated run-loop thread. Events are passed through unmodified.
-public final class GlobalHotkeyMonitor: HotkeyService {
+public final class GlobalHotkeyMonitor {
     public var onHotkeyPressed: (() -> Void)?
     public var onKillSwitch: (() -> Void)?
 

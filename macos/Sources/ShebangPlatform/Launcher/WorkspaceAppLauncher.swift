@@ -61,31 +61,10 @@ public final class WorkspaceAppLauncher: AppLauncher {
     private static let trailingAppRegex = launcherRegex(
         #"\b(?:in|using|with|on)\s+([a-zA-Z0-9\-_ ]+?)(?:\s+browser)?\s*[.!]?\s*$"#)
 
-    /// "open textedit", "switch to discord", ... — shares the decision model's parser so both agree.
-    public static func extractAppLaunchCandidates(_ goal: String) -> [String] {
-        JevDecisionModel.extractAppLaunchCandidates(goal)
-    }
-
-    public func extractAppLaunch(from goal: String) -> (appName: String, launchCommand: String)? {
-        let candidates = Self.extractAppLaunchCandidates(goal)
-        guard let first = candidates.first else { return nil }
-
-        for candidate in candidates {
-            if let url = resolveApplication(named: candidate) {
-                return (candidate, url.path)
-            }
-        }
-        // Not installed (or not indexed yet): keep the name and resolve again at launch time.
-        return Self.isSafeLaunchCommand(first) ? (first, first) : nil
-    }
-
-    public func extractURLLaunch(from goal: String) -> URL? {
-        UrlLauncherValidator.extractWebURLs(goal).first
-    }
-
     /// The browser named in a goal ("open brave and search lion", "search lion in firefox"), if installed.
+    /// Shares the decision model's app-intent parser so both agree on what the goal opens.
     public func browserName(in goal: String) -> String? {
-        var candidates = Self.extractAppLaunchCandidates(goal)
+        var candidates = JevDecisionModel.extractAppLaunchCandidates(goal)
         if let trailing = Self.firstCapture(Self.trailingAppRegex, in: goal)?.trimmingCharacters(in: .whitespaces),
            !trailing.isEmpty {
             candidates.append(trailing)
@@ -97,21 +76,17 @@ public final class WorkspaceAppLauncher: AppLauncher {
 
     // MARK: - Launching
 
-    public func launchApp(named appName: String, launchCommand: String? = nil) async throws -> AppTarget? {
+    public func launchApp(named appName: String) async throws -> AppTarget? {
         try Task.checkCancellation()
         let name = appName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let trimmedCommand = launchCommand?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let explicitCommand = trimmedCommand.isEmpty ? nil : trimmedCommand
-
-        let resolvedFromName = explicitCommand == nil ? resolveApplication(named: name) : nil
-        let command = explicitCommand ?? resolvedFromName?.path ?? name
-        guard Self.isSafeLaunchCommand(command) else {
+        // Check the requested name before any lookup, then whatever bundle it resolves to.
+        let resolved = resolveApplication(named: name)
+        for command in [name, resolved?.path].compactMap({ $0 }) where !Self.isSafeLaunchCommand(command) {
             Log.app.warning("Refusing to launch '\(command, privacy: .public)': safety violation")
             throw AppLauncherError.blockedBySafetyPolicy(command)
         }
 
-        var appURL = resolvedFromName ?? resolveApplication(named: command)
-        if appURL == nil && command != name { appURL = resolveApplication(named: name) }
+        var appURL = resolved
         if appURL == nil { appURL = await spotlightMatch(for: name) }
         guard let appURL else {
             Log.app.warning("No application found for '\(name, privacy: .public)'")

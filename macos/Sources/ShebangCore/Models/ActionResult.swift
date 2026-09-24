@@ -4,8 +4,6 @@ public struct ActionResult: Sendable, Equatable {
     public var success: Bool
     public var errorMessage: String?
     public var message: String?
-    /// Filled in by the executor once the action finishes.
-    public var duration: TimeInterval = 0
     /// Set when the action launched or switched to a different app/window.
     public var newTarget: AppTarget?
 

@@ -27,8 +27,6 @@ public struct AgentDecision: Sendable, Equatable, Codable {
     public var targetId: String?
     public var targetLabel: String?
     public var textValue: String?
-    public var x: Int?
-    public var y: Int?
     public var reason: String?
     public var confidence: Double
 
@@ -37,8 +35,6 @@ public struct AgentDecision: Sendable, Equatable, Codable {
         targetId: String? = nil,
         targetLabel: String? = nil,
         textValue: String? = nil,
-        x: Int? = nil,
-        y: Int? = nil,
         reason: String? = nil,
         confidence: Double = 1.0
     ) {
@@ -46,8 +42,6 @@ public struct AgentDecision: Sendable, Equatable, Codable {
         self.targetId = targetId
         self.targetLabel = targetLabel
         self.textValue = textValue
-        self.x = x
-        self.y = y
         self.reason = reason
         self.confidence = confidence
     }

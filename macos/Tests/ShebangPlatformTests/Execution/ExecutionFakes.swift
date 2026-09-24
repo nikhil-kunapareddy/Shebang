@@ -87,14 +87,11 @@ final class FakeAppLauncher: AppLauncher, @unchecked Sendable {
     var appResult: AppTarget?
     var urlResult: AppTarget?
     var error: Error?
-    private(set) var launchedApps: [(name: String, command: String?)] = []
+    private(set) var launchedApps: [String] = []
     private(set) var launchedURLs: [URL] = []
 
-    func extractAppLaunch(from goal: String) -> (appName: String, launchCommand: String)? { nil }
-    func extractURLLaunch(from goal: String) -> URL? { nil }
-
-    func launchApp(named appName: String, launchCommand: String?) async throws -> AppTarget? {
-        launchedApps.append((appName, launchCommand))
+    func launchApp(named appName: String) async throws -> AppTarget? {
+        launchedApps.append(appName)
         if let error { throw error }
         return appResult
     }
