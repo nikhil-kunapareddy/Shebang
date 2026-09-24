@@ -105,7 +105,7 @@ shebang run "calculate 450 * 12 + 85" --target Calculator --live
 shebang help
 ```
 
-- `--target` (alias `--process`) takes an app name, bundle identifier, or pid of a running app. Without it, `read` and `run` count down 3 seconds and capture the frontmost app, so switch to the target app during the countdown; the CLI cannot skip the terminal it runs in, and refuses live runs against it.
+- `--target` (`-t`) takes an app name, bundle identifier, or pid of a running app. Without it, `read` and `run` count down 3 seconds and capture the frontmost app, so switch to the target app during the countdown; the CLI cannot skip the terminal it runs in, and refuses live runs against it.
 - `run` simulates actions unless `DRY_RUN=false` is set; `--dry-run` and `--live` override the environment. `dry-run "<goal>"` is shorthand for `run --dry-run`. Runs stop after `--max-steps` (default `MAX_STEPS_PER_RUN`, else 10; 0 = unlimited) or when the screen stops changing.
 - `run --confirm-risky` has Jev score each click and asks `[y/N]` in the terminal before high-risk ones.
 - **Ctrl-C** cancels a run cleanly and prints the cancelled result; a second Ctrl-C quits immediately.
