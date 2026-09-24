@@ -19,6 +19,7 @@ let package = Package(
         .executableTarget(name: "GhostHandCLI", dependencies: ["GhostHandCore", "GhostHandPlatform"]),
         .testTarget(name: "GhostHandCoreTests", dependencies: ["GhostHandCore"]),
         .testTarget(name: "GhostHandPlatformTests", dependencies: ["GhostHandPlatform"]),
+        .testTarget(name: "GhostHandAppTests", dependencies: ["GhostHandApp"]),
     ],
     swiftLanguageModes: [.v5]
 )
