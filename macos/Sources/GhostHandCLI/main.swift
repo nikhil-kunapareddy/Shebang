@@ -1,2 +1,4 @@
-// Placeholder entry point; replaced by the `ghosthand` CLI.
-print("ghosthand: not implemented yet")
+import Foundation
+
+// `ghosthand` developer CLI. Everything lives in GhostHandCLI.swift and the command files.
+exit(await GhostHandCLI.main(arguments: Array(CommandLine.arguments.dropFirst())))
