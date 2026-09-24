@@ -40,8 +40,8 @@ struct UsageError: Error, Equatable {
     }
 }
 
-/// Hand-rolled argument parsing. Commands and options are case-insensitive, like the Windows CLI;
-/// `--name=value` is accepted and `--` ends option parsing (for goals that start with `-`).
+/// Hand-rolled argument parsing. Commands and options are case-insensitive, `--name=value` is accepted,
+/// and `--` ends option parsing (for goals that start with `-`).
 enum CLIParser {
     private enum Option {
         case target, mode, maxSteps, confirmRisky
@@ -76,10 +76,10 @@ enum CLIParser {
             }
             return .check
 
-        case "read", "snapshot":
+        case "read":
             let scanned = try scan(rest, command: command, allowed: [.target])
             if scanned.wantsHelp { return .help }
-            // The Windows `snapshot <name|pid>` took the target positionally; both forms work.
+            // The target may be given positionally or with --target, but not both.
             guard scanned.positionals.count <= 1, scanned.positionals.isEmpty || scanned.target == nil else {
                 throw UsageError("'\(command)' takes a single target: shebang read [--target] <app|bundle-id|pid>")
             }
@@ -154,7 +154,7 @@ enum CLIParser {
                 try noValue()
                 scanned.wantsHelp = true
 
-            case "-t", "--target", "--process":
+            case "-t", "--target":
                 try requireAllowed(.target)
                 let query = try value().trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !query.isEmpty else { throw UsageError("Option '\(name)' needs an app name, bundle id, or pid.") }

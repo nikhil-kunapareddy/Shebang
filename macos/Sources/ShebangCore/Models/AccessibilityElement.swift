@@ -51,11 +51,6 @@ public struct AccessibilityElement: Sendable, Equatable, Codable {
     }
 
     public var isOutcomeEvidence: Bool {
-        ["text", "statictext", "axstatictext", "statusbar"].contains(role.lowercased())
-    }
-
-    public func compactDescription(maxChars: Int = 160) -> String {
-        let text = displayLabel.isEmpty ? displayRole : displayLabel
-        return text.count > maxChars ? String(text.prefix(maxChars)) + "..." : text
+        ["statictext", "axstatictext"].contains(role.lowercased())
     }
 }

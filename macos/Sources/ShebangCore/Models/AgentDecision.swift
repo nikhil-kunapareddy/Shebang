@@ -1,6 +1,6 @@
 import Foundation
 
-/// Raw values match the Windows build so audit logs and Jev choice ids stay compatible.
+/// Raw values are the operation names sent to Jev and written to the audit log, so keep them stable.
 public enum AgentOperation: String, Sendable, Codable, CaseIterable {
     case click = "Click"
     case typeText = "TypeText"
@@ -21,7 +21,7 @@ public enum AgentOperation: String, Sendable, Codable, CaseIterable {
     case askUser = "AskUser"
 }
 
-/// A concrete decision made by Jev or the deterministic fallback.
+/// A concrete action chosen by the decision model.
 public struct AgentDecision: Sendable, Equatable, Codable {
     public var operation: AgentOperation
     public var targetId: String?
@@ -31,7 +31,6 @@ public struct AgentDecision: Sendable, Equatable, Codable {
     public var y: Int?
     public var reason: String?
     public var confidence: Double
-    public var requiresConfirmation: Bool
 
     public init(
         operation: AgentOperation,
@@ -41,8 +40,7 @@ public struct AgentDecision: Sendable, Equatable, Codable {
         x: Int? = nil,
         y: Int? = nil,
         reason: String? = nil,
-        confidence: Double = 1.0,
-        requiresConfirmation: Bool = false
+        confidence: Double = 1.0
     ) {
         self.operation = operation
         self.targetId = targetId
@@ -52,6 +50,5 @@ public struct AgentDecision: Sendable, Equatable, Codable {
         self.y = y
         self.reason = reason
         self.confidence = confidence
-        self.requiresConfirmation = requiresConfirmation
     }
 }

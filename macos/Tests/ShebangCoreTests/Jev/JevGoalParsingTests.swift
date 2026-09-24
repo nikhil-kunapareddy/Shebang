@@ -7,7 +7,6 @@ import Testing
         ("open brave and search lion", "lion"),
         ("search about lion", "lion"),
         ("open chrome and search for weather", "weather"),
-        ("write hello into notepad", "hello"),
         ("write hello into textedit", "hello"),
         ("open spotify and play any song of aditya rikhari", "aditya rikhari"),
         ("play aditya rikhari on spotify", "aditya rikhari"),

@@ -2,10 +2,10 @@ import Foundation
 import Testing
 @testable import ShebangCore
 
-/// Core side of Windows AuditLogTests: the entries the loop hands to `AuditLog`. The JSONL writer and its
-/// secret scrubbing are tested with `JSONLAuditLog` in ShebangPlatformTests.
+/// The entries the loop hands to `AuditLog`. The JSONL writer and its secret scrubbing are tested with
+/// `JSONLAuditLog` in ShebangPlatformTests.
 @Suite struct AuditTrailTests {
-    let explorer = AppTarget.fake(pid: 321, name: "Finder", bundleId: "com.apple.finder", title: "Documents Folder")
+    let finder = AppTarget.fake(pid: 321, name: "Finder", bundleId: "com.apple.finder", title: "Documents Folder")
 
     @Test func executedAction_isAuditedWithAllFields() async throws {
         let element = AccessibilityElement(id: "e12", role: "AXButton", label: "Download PDF")
@@ -16,7 +16,7 @@ import Testing
                              decisionModel: FakeDecisionModel(script: [decision]), actionExecutor: FakeActionExecutor(),
                              options: AgentLoopOptions(maxSteps: 5), auditLog: audit, clock: clock)
 
-        _ = await loop.run(goal: "Search for quarterly reports", target: explorer)
+        _ = await loop.run(goal: "Search for quarterly reports", target: finder)
 
         let entry = try #require(audit.entries.first)
         #expect(audit.entries.count == 1)
@@ -39,7 +39,7 @@ import Testing
                              actionExecutor: FakeActionExecutor(), options: AgentLoopOptions(maxSteps: 5),
                              auditLog: audit, clock: FakeClock())
 
-        _ = await loop.run(goal: "click", target: explorer)
+        _ = await loop.run(goal: "click", target: finder)
 
         let entry = try #require(audit.entries.first)
         #expect(entry.targetLabel == "Old Button")
@@ -56,7 +56,7 @@ import Testing
         let loop = AgentLoop(screenReader: FakeScreenReader.changing(), decisionModel: model, actionExecutor: FakeActionExecutor(),
                              options: AgentLoopOptions(maxSteps: 10), auditLog: audit, clock: FakeClock())
 
-        _ = await loop.run(goal: "navigate", target: explorer)
+        _ = await loop.run(goal: "navigate", target: finder)
 
         #expect(audit.entries.map(\.operation) == [.scrollDown, .pressTab, .pressReturn])
         #expect(audit.entries.allSatisfy { $0.decisionType == "auto" })

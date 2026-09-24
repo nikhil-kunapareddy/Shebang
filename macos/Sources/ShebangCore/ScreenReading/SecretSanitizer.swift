@@ -13,8 +13,7 @@ public enum SecretSanitizer {
     private static let bearerRegex = NSRegularExpression(
         literal: #"(Bearer\s+)[a-zA-Z0-9_\-\.]{15,}"#, options: .caseInsensitive)
 
-    public static func sanitize(_ text: String?, isPassword: Bool = false) -> String {
-        if isPassword { return "[PASSWORD]" }
+    public static func sanitize(_ text: String?) -> String {
         guard let text, !text.isEmpty else { return "" }
 
         var sanitized = cardRegex.replacingMatches(in: text, with: "[REDACTED_CARD]")

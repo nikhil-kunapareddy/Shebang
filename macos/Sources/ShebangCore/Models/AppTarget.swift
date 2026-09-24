@@ -9,7 +9,7 @@ public struct AppTarget: Sendable, Equatable, Codable {
     public var bundleIdentifier: String
     public var executablePath: String
     public var windowTitle: String
-    /// `CGWindowID` of the target window; 0 when unknown. The macOS analogue of a Windows HWND.
+    /// `CGWindowID` of the target window; 0 when unknown.
     public var windowNumber: Int
     /// Window frame in global screen coordinates (top-left origin).
     public var windowBounds: CGRect
@@ -31,6 +31,4 @@ public struct AppTarget: Sendable, Equatable, Codable {
         self.windowNumber = windowNumber
         self.windowBounds = windowBounds
     }
-
-    public var bounds: CGRect { windowBounds }
 }

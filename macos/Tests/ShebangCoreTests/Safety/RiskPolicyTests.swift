@@ -2,20 +2,19 @@ import Foundation
 import Testing
 @testable import ShebangCore
 
-/// Jarvis-mode risk policy: everything runs automatically except deletions, which are strictly prohibited.
+/// Default risk policy: everything runs automatically except deletions, which are strictly prohibited.
 @Suite struct RiskPolicyTests {
     let policy = DefaultRiskPolicy()
     let sampleApp = AppTarget.fake(pid: 1234, name: "Google Chrome", bundleId: "com.google.Chrome",
                                    title: "Mock Application Form", window: 0x1234)
 
-    // RS01
     @Test(arguments: [
         "Submit", "Submit Application", "Apply Now", "Send Email", "Pay $50", "Buy License", "Purchase Ticket",
         "Order Food", "Post Update", "Publish Article", "Confirm Transaction", "Sign in to Account",
         "Install Package", "Run Executable", "Transfer Funds", "Spotify pinned", "Search", "Next", "Previous",
         "View Profile", "Read More", "Refresh Feed", "Filter By Name",
     ])
-    func rs01_allSafeActions_neverRequireConfirmation(_ label: String) {
+    func allSafeActions_neverRequireConfirmation(_ label: String) {
         let decision = AgentDecision(operation: .click, targetId: "e1", targetLabel: label)
         let element = AccessibilityElement(id: "e1", role: "AXButton", label: label)
 
@@ -23,8 +22,8 @@ import Testing
         #expect(policy.actionProhibitionReason(for: decision, target: element, goal: "do it") == nil)
     }
 
-    // RS02: even when the model rates a click irreversible, Jarvis mode neither asks the model nor the user.
-    @Test func rs02_modelRisk_doesNotBlockExecution_inJarvisMode() async {
+    // Even when the model would rate a click irreversible, the default loop neither asks the model nor the user.
+    @Test func modelRisk_doesNotBlockExecution_byDefault() async {
         let element = AccessibilityElement(id: "e2", role: "AXButton", label: "Export and Sync External Service")
         let decision = AgentDecision(operation: .click, targetId: "e2", targetLabel: element.label)
         #expect(policy.confirmationReason(for: decision, target: element, app: sampleApp) == nil)
@@ -45,8 +44,7 @@ import Testing
         #expect(executor.executed.count == 1)
     }
 
-    // RS04
-    @Test func rs04_safeAction_executedDirectly_noPrompt() async {
+    @Test func safeAction_executedDirectly_noPrompt() async {
         let element = AccessibilityElement(id: "e1", role: "AXButton", label: "Submit Application")
         let decision = AgentDecision(operation: .click, targetId: "e1", targetLabel: "Submit Application")
         let executor = FakeActionExecutor()
@@ -66,36 +64,31 @@ import Testing
         #expect(audit.entries.map(\.decisionType) == ["auto"])
     }
 
-    // RS05
-    @Test func rs05_passwordField_noConfirmationRequired() {
+    @Test func passwordField_noConfirmationRequired() {
         let decision = AgentDecision(operation: .click, targetId: "pw1", targetLabel: "Password")
         let element = AccessibilityElement(id: "pw1", role: "AXSecureTextField", label: "Password", value: "[PASSWORD]")
         #expect(policy.confirmationReason(for: decision, target: element, app: sampleApp) == nil)
     }
 
-    // RS06
-    @Test func rs06_sensitiveTypedText_noConfirmation() {
+    @Test func sensitiveTypedText_noConfirmation() {
         let decision = AgentDecision(operation: .typeText, targetId: "e1", targetLabel: "Search Box",
                                      textValue: "submit login transfer")
         #expect(policy.confirmationReason(for: decision, target: nil, app: sampleApp) == nil)
         #expect(policy.actionProhibitionReason(for: decision, target: nil, goal: "search") == nil)
     }
 
-    // RS08
     @Test(arguments: [
         ("Google Chrome", "com.google.Chrome", "Submit Application Form"),
         ("Brave Browser", "com.brave.Browser", "Google Search"),
         ("Spotify", "com.spotify.client", "Spotify"),
         ("Finder", "com.apple.finder", "Desktop"),
         ("Safari", "com.apple.Safari", "Favorites"),
-        ("chrome", "", "Windows-style process name"),
     ])
-    func rs08_allApps_areAllowed_exceptPasswordManagers(_ name: String, _ bundleId: String, _ title: String) {
+    func allApps_areAllowed_exceptPasswordManagers(_ name: String, _ bundleId: String, _ title: String) {
         let app = AppTarget.fake(pid: 1111, name: name, bundleId: bundleId, title: title, window: 0x1111)
         #expect(policy.denialReason(for: app) == nil)
     }
 
-    // RS09
     @Test(arguments: [
         ("1Password", "com.1password.1password"),
         ("1Password 7", "com.agilebits.onepassword7"),
@@ -112,7 +105,7 @@ import Testing
         ("Schlüsselbundverwaltung", "com.apple.keychainaccess"),
         ("Passwörter", "com.apple.Passwords"),
     ])
-    func rs09_denyListedApps_areRefusedImmediately(_ name: String, _ bundleId: String) async {
+    func denyListedApps_areRefusedImmediately(_ name: String, _ bundleId: String) async {
         let deniedApp = AppTarget.fake(pid: 9999, name: name, bundleId: bundleId, title: name, window: 0x9999)
         let reader = FakeScreenReader.changing()
         let executor = FakeActionExecutor()
@@ -141,12 +134,11 @@ import Testing
         #expect(custom.denialReason(for: .fake(name: "", bundleId: "")) == nil)
     }
 
-    // RS10
     @Test(arguments: [
         "delete all temp files", "erase all user data", "wipe hard disk", "destroy current session",
         "del secret.txt", "format c:", "truncate the logs table", "Complete the DELETION of my account",
     ])
-    func rs10_deletionGoals_areStrictlyProhibited(_ goal: String) {
+    func deletionGoals_areStrictlyProhibited(_ goal: String) {
         let reason = policy.goalProhibitionReason(goal)
         #expect(reason?.localizedCaseInsensitiveContains("prohibited") == true)
     }
@@ -157,7 +149,7 @@ import Testing
         "transfer funds to savings", "delegate the meeting to Sam", "use the model picker", "reformatted text",
         "", "   ",
     ])
-    func rs10_benignGoals_areNotProhibited(_ goal: String) {
+    func benignGoals_areNotProhibited(_ goal: String) {
         #expect(policy.goalProhibitionReason(goal) == nil)
     }
 
@@ -166,9 +158,8 @@ import Testing
             == "Prohibited by safety policy: Deletion tasks (matching 'DELETE') are strictly prohibited.")
     }
 
-    // RS11
     @Test(arguments: ["Delete", "Erase All", "Wipe Disk"])
-    func rs11_deletionActionLabels_areStrictlyProhibited(_ label: String) {
+    func deletionActionLabels_areStrictlyProhibited(_ label: String) {
         let decision = AgentDecision(operation: .click, targetId: "e_del", targetLabel: label)
         let element = AccessibilityElement(id: "e_del", role: "AXButton", label: label)
 
@@ -188,7 +179,7 @@ import Testing
         let typedAndSubmitted = AgentDecision(operation: .typeAndEnter, targetId: "e2", textValue: "format disk0")
         #expect(policy.actionProhibitionReason(for: typedAndSubmitted, target: nil, goal: "run") != nil)
 
-        // Text on non-typing operations is not inspected, as on Windows.
+        // Text on non-typing operations is not inspected.
         let url = AgentDecision(operation: .openUrl, targetId: "https://example.com", textValue: "delete")
         #expect(policy.actionProhibitionReason(for: url, target: nil, goal: "browse") == nil)
     }
@@ -207,20 +198,16 @@ import Testing
         #expect(custom.goalProhibitionReason("dropXtable users") == nil)
     }
 
-    @Test func optionDefaults_matchJarvisMode() {
+    @Test func optionDefaults() {
         let options = RiskPolicyOptions()
-        #expect(options.sensitiveVerbs.isEmpty)
-        // Windows terms plus the macOS deletion vocabulary.
+        // General deletion verbs plus shell, Finder, and diskutil terms.
         #expect(options.prohibitedTerms.isSuperset(of: ["delete", "deletion", "erase", "wipe", "destroy", "truncate", "format", "del"]))
         #expect(options.prohibitedTerms.isSuperset(of: ["rm", "rmdir", "empty trash", "move to trash", "erasedisk"]))
-        #expect(options.escalateOnRiskScore == .irreversibleOrExternalEffect)
-        #expect(!options.requireConfirmationOnSensitiveText)
         #expect(options.denyListedApps.contains("com.apple.keychainaccess"))
         #expect(options.denyListedApps.contains("com.apple.passwords"))
     }
 
-    // RS12
-    @Test func rs12_agentLoop_abortsImmediately_onProhibitedGoal() async {
+    @Test func agentLoop_abortsImmediately_onProhibitedGoal() async {
         let reader = FakeScreenReader.changing()
         let executor = FakeActionExecutor()
         let prompt = FakeConfirmationPrompt()
@@ -243,8 +230,7 @@ import Testing
         #expect(audit.entries.first?.operation == .askUser)
     }
 
-    // RS13
-    @Test func rs13_agentLoop_abortsImmediately_onProhibitedAction() async {
+    @Test func agentLoop_abortsImmediately_onProhibitedAction() async {
         let element = AccessibilityElement(id: "del_btn", role: "AXButton", label: "Delete")
         let decision = AgentDecision(operation: .click, targetId: "del_btn", targetLabel: "Delete")
         let executor = FakeActionExecutor()

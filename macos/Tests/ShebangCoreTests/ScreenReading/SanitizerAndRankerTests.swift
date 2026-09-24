@@ -3,9 +3,7 @@ import Testing
 @testable import ShebangCore
 
 @Suite struct SecretSanitizerTests {
-    @Test func passwordFieldsAndSecretsAreRedacted() {
-        #expect(SecretSanitizer.sanitize("SuperSecretP@ssword123!", isPassword: true) == "[PASSWORD]")
-
+    @Test func secretsAreRedacted() {
         let card = SecretSanitizer.sanitize("Please bill credit card 4111 2222 3333 4444 for $50")
         #expect(!card.contains("4111 2222 3333 4444"))
         #expect(card.contains("[REDACTED_CARD]"))
@@ -78,10 +76,11 @@ import Testing
         #expect(labels2.contains("Visible Button"))
     }
 
-    @Test func interactiveRolesCoverMacAndWindowsNames() {
+    @Test func interactiveRolesAreAXControls() {
         #expect(ElementRanker.isInteractive("AXButton"))
         #expect(ElementRanker.isInteractive("AXTextField"))
-        #expect(ElementRanker.isInteractive("Edit"))
+        #expect(ElementRanker.isInteractive("AXSearchField"))
         #expect(!ElementRanker.isInteractive("AXGroup"))
+        #expect(!ElementRanker.isInteractive("OCRText"))
     }
 }

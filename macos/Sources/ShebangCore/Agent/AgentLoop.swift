@@ -150,7 +150,7 @@ public final class AgentLoop {
                     return .failed(steps: step, history: history, error: reason)
                 }
 
-                // 8. Confirmation gate. The default Jarvis-mode policy never requires confirmation.
+                // 8. Confirmation gate. The default policy never asks; custom policies and opt-in model escalation can.
                 var confirmationReason = riskPolicy.confirmationReason(
                     for: decision, target: targetElement, app: currentTarget)
                 if confirmationReason == nil, decision.operation == .click,
@@ -186,7 +186,7 @@ public final class AgentLoop {
                 // A kill switch that fired while deciding or confirming must not let the action through.
                 try Task.checkCancellation()
                 let result = try await actionExecutor.execute(decision, targetElement: targetElement)
-                let outcome = result.success ? "ok" : (result.error ?? "")
+                let outcome = result.success ? "ok" : (result.errorMessage ?? "")
                 history.append(
                     "\(decision.operation.rawValue):\(decision.targetId ?? "") (\(decision.targetLabel ?? "")) -> \(outcome)")
                 onStepCompleted?(step, decision, result)
@@ -232,8 +232,8 @@ public final class AgentLoop {
 
     // MARK: - Helpers
 
-    /// Checks the deny-list for the initial target and, beyond the Windows build, for every target switch,
-    /// so the loop never reads or drives a password manager the user or an action brought to the front.
+    /// Checks the deny-list for the initial target and for every target switch, so the loop never reads or
+    /// drives a password manager the user or an action brought to the front.
     private func refuseIfDenied(_ app: AppTarget, goal: String, step: Int, history: [String]) async -> AgentRunResult? {
         guard let reason = riskPolicy.denialReason(for: app) else { return nil }
         Log.safety.warning("App deny-list triggered: \(reason, privacy: .public)")

@@ -20,8 +20,7 @@ import Testing
 
     // MARK: - Call A
 
-    @Test(arguments: ["Button", "AXButton"])
-    func jv08ExecutesTopActionEvenWithLowConfidence(role: String) async throws {
+    @Test func executesTopActionEvenWithLowConfidence() async throws {
         let response = try decodeJevResponse("""
         {
             "answers": {
@@ -34,7 +33,7 @@ import Testing
             }
         }
         """)
-        let elements = [AccessibilityElement(id: "btn1", role: role, label: "Search")]
+        let elements = [AccessibilityElement(id: "btn1", role: "AXButton", label: "Search")]
 
         let decision = try await model(FakeJevClient(response))
             .decideNextAction(goal: "Search for test", target: target, elements: elements, history: [])
@@ -162,7 +161,6 @@ import Testing
             AccessibilityElement(id: "e4", role: "AXStaticText", label: "Results"),
             AccessibilityElement(id: "e5", role: "AXGroup", label: "Clickable card", actions: ["AXPress"]),
             AccessibilityElement(id: "e6", role: "OCRText", label: "Adele", source: "ocr"),
-            AccessibilityElement(id: "e7", role: "Edit", label: "UIA-style edit"),
         ]
 
         let choices = JevDecisionModel.buildCandidateChoices(goal: "open spotify and search for Adele", elements: elements)
@@ -178,12 +176,10 @@ import Testing
         #expect(choices["click:e6"] == nil)
         #expect(choices["type:e3:Adele"] == "Type \"Adele\" into TextField \"Search field\"")
         #expect(choices["type_and_enter:e3:Adele"] == "Type \"Adele\" into TextField \"Search field\" and press Return")
-        #expect(choices["type:e7:Adele"] != nil)
         for key in ["press:enter", "press:space", "press:media_play", "press:tab", "press:escape",
                     "scroll:down", "scroll:up", "wait", "done", "ask_user"] {
             #expect(choices[key] != nil, "missing \(key)")
         }
-        #expect(!choices.values.contains { $0.contains("Windows") || $0.contains("Start menu") })
     }
 
     @Test func clickCandidatesAreCappedAtTwentyFive() {

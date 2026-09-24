@@ -47,10 +47,6 @@ public enum UrlLauncherValidator {
         return url
     }
 
-    public static func isValidWebURL(_ rawURL: String?) -> Bool {
-        validatedWebURL(rawURL) != nil
-    }
-
     public static func extractWebURLs(_ prompt: String) -> [URL] {
         guard !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return [] }
 

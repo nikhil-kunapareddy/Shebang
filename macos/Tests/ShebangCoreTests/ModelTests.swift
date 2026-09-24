@@ -13,12 +13,7 @@ import Testing
         #expect(element.displayLabel == "hello")
     }
 
-    @Test func compactDescriptionTruncates() {
-        let element = AccessibilityElement(id: "1", role: "AXStaticText", label: String(repeating: "a", count: 200))
-        #expect(element.compactDescription(maxChars: 10) == "aaaaaaaaaa...")
-    }
-
-    @Test func operationRawValuesMatchWindowsBuild() {
+    @Test func operationRawValuesAreStableWireNames() {
         #expect(AgentOperation.typeAndEnter.rawValue == "TypeAndEnter")
         #expect(AgentOperation.openUrl.rawValue == "OpenUrl")
     }

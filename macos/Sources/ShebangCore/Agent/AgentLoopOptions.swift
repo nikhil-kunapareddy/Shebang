@@ -5,10 +5,10 @@ public struct AgentLoopOptions: Sendable, Equatable {
     public var maxSteps: Int
     public var dryRun: Bool
     public var maxConsecutiveStalls: Int
-    /// Carried over from Windows, where the loop does not enforce it either.
+    /// Not enforced by the loop.
     public var actionTimeoutSeconds: Int
     /// Jev Call B: when set, Click actions the risk policy allows are scored with `DecisionModel.evaluateActionRisk`
-    /// and need confirmation at or above this score. `nil` keeps Windows Jarvis mode, which skips the call.
+    /// and need confirmation at or above this score. `nil` (the default) skips the call.
     public var escalateOnModelRiskScore: ActionRiskScore?
 
     public init(

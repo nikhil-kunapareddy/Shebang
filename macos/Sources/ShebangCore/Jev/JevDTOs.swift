@@ -1,7 +1,7 @@
 import Foundation
 
-// Wire format of the Vercel AI Gateway `/v1/evaluate` endpoint. JSON keys match the Windows
-// build's `[JsonPropertyName]` attributes; nil optionals are omitted when encoding.
+// Wire format of the Vercel AI Gateway `/v1/evaluate` endpoint. Property names are the JSON keys;
+// nil optionals are omitted when encoding.
 
 public struct EvaluateRequest: Codable, Sendable, Equatable {
     public var model: String
@@ -93,13 +93,11 @@ public struct GatewayOptions: Codable, Sendable, Equatable {
 
 // MARK: - Response
 
-/// Top-level keys are matched case-insensitively and unknown keys are kept in `additionalData`,
-/// like the Windows deserializer.
+/// Keys are matched case-insensitively; unknown keys are ignored.
 public struct EvaluateResponse: Decodable, Sendable, Equatable {
     public var answers: [String: JevJSON]
     public var usage: UsageInfo?
     public var providerMetadata: ProviderMetadataInfo?
-    public var additionalData: [String: JevJSON]?
 
     public struct BooleanAnswer: Sendable, Equatable {
         public var probability: Double
@@ -118,16 +116,10 @@ public struct EvaluateResponse: Decodable, Sendable, Equatable {
         public var probabilities: [Double]
     }
 
-    public init(
-        answers: [String: JevJSON] = [:],
-        usage: UsageInfo? = nil,
-        providerMetadata: ProviderMetadataInfo? = nil,
-        additionalData: [String: JevJSON]? = nil
-    ) {
+    public init(answers: [String: JevJSON] = [:], usage: UsageInfo? = nil, providerMetadata: ProviderMetadataInfo? = nil) {
         self.answers = answers
         self.usage = usage
         self.providerMetadata = providerMetadata
-        self.additionalData = additionalData
     }
 
     public init(from decoder: Decoder) throws {
@@ -135,7 +127,6 @@ public struct EvaluateResponse: Decodable, Sendable, Equatable {
         answers = try object.decode([String: JevJSON].self, "answers") ?? [:]
         usage = try object.decode(UsageInfo.self, "usage")
         providerMetadata = try object.decode(ProviderMetadataInfo.self, "providerMetadata")
-        additionalData = object.extras(excluding: ["answers", "usage", "providerMetadata"])
     }
 
     /// `{"probability": p}`; true when p >= 0.5. Probabilities outside [0, 1] are treated as unparseable.
@@ -189,73 +180,31 @@ public struct UsageInfo: Decodable, Sendable, Equatable {
     public var promptTokens: Int
     public var completionTokens: Int
     public var totalTokens: Int
-    public var additionalData: [String: JevJSON]?
-
-    public init(promptTokens: Int = 0, completionTokens: Int = 0, totalTokens: Int = 0, additionalData: [String: JevJSON]? = nil) {
-        self.promptTokens = promptTokens
-        self.completionTokens = completionTokens
-        self.totalTokens = totalTokens
-        self.additionalData = additionalData
-    }
 
     public init(from decoder: Decoder) throws {
         let object = try LenientObject(decoder)
         promptTokens = object.int("promptTokens")
         completionTokens = object.int("completionTokens")
         totalTokens = object.int("totalTokens")
-        additionalData = object.extras(excluding: ["promptTokens", "completionTokens", "totalTokens"])
     }
 }
 
 public struct ProviderMetadataInfo: Decodable, Sendable, Equatable {
     public var gateway: GatewayMetadata?
-    public var additionalData: [String: JevJSON]?
-
-    public init(gateway: GatewayMetadata? = nil, additionalData: [String: JevJSON]? = nil) {
-        self.gateway = gateway
-        self.additionalData = additionalData
-    }
 
     public init(from decoder: Decoder) throws {
         let object = try LenientObject(decoder)
         gateway = try object.decode(GatewayMetadata.self, "gateway")
-        additionalData = object.extras(excluding: ["gateway"])
     }
 }
 
 public struct GatewayMetadata: Decodable, Sendable, Equatable {
     /// The gateway reports cost as a number or a numeric string.
     public var rawCost: JevJSON?
-    public var provider: String?
-    public var model: String?
-    public var generationId: String?
-    public var routing: JevJSON?
-    public var additionalData: [String: JevJSON]?
-
-    public init(
-        rawCost: JevJSON? = nil,
-        provider: String? = nil,
-        model: String? = nil,
-        generationId: String? = nil,
-        routing: JevJSON? = nil,
-        additionalData: [String: JevJSON]? = nil
-    ) {
-        self.rawCost = rawCost
-        self.provider = provider
-        self.model = model
-        self.generationId = generationId
-        self.routing = routing
-        self.additionalData = additionalData
-    }
 
     public init(from decoder: Decoder) throws {
         let object = try LenientObject(decoder)
         rawCost = try object.decode(JevJSON.self, "cost")
-        provider = object.string("provider")
-        model = object.string("model")
-        generationId = object.string("generationId")
-        routing = try object.decode(JevJSON.self, "routing")
-        additionalData = object.extras(excluding: ["cost", "provider", "model", "generationId", "routing"])
     }
 
     /// Cost in USD, or nil when absent or not numeric.
@@ -279,8 +228,7 @@ private struct AnyCodingKey: CodingKey {
     init?(intValue: Int) { nil }
 }
 
-/// A JSON object read with case-insensitive property names (System.Text.Json
-/// `PropertyNameCaseInsensitive`) whose unknown members can be collected (`[JsonExtensionData]`).
+/// A JSON object whose property names are matched case-insensitively.
 private struct LenientObject {
     private let container: KeyedDecodingContainer<AnyCodingKey>
 
@@ -300,22 +248,9 @@ private struct LenientObject {
         return try container.decode(T.self, forKey: key)
     }
 
-    func string(_ name: String) -> String? {
-        ((try? decode(JevJSON.self, name)) ?? nil)?.stringValue
-    }
-
     /// Token counts: any number is accepted and rounded; anything else reads as 0.
     func int(_ name: String) -> Int {
         guard let value = ((try? decode(JevJSON.self, name)) ?? nil)?.doubleValue else { return 0 }
         return Int(exactly: value.rounded()) ?? 0
-    }
-
-    func extras(excluding names: Set<String>) -> [String: JevJSON]? {
-        let known = Set(names.map { $0.lowercased() })
-        var extras: [String: JevJSON] = [:]
-        for key in container.allKeys where !known.contains(key.stringValue.lowercased()) {
-            extras[key.stringValue] = (try? container.decode(JevJSON.self, forKey: key)) ?? .null
-        }
-        return extras.isEmpty ? nil : extras
     }
 }

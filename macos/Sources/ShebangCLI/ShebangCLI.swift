@@ -65,18 +65,16 @@ enum ShebangCLI {
 
         Commands:
           check                 Check the API key, macOS permissions, and Jev connectivity
-          read [<app>]          Print the ranked UI elements Shebang sees in an app's focused
-                                window (alias: snapshot)
+          read [<app>]          Print the ranked UI elements Shebang sees in an app's focused window
           run "<goal>"          Run the agent loop on an app (dry-run unless DRY_RUN=false or --live)
           dry-run "<goal>"      Same as run --dry-run
           version               Print the version
           help                  Show this help
 
         Target (read, run, dry-run):
-          -t, --target <app>    App name, bundle identifier, or process id of a running app
-                                (alias: --process). Without it, shebang counts down 3 seconds and
-                                captures the frontmost app: switch to the target app during the
-                                countdown.
+          -t, --target <app>    App name, bundle identifier, or process id of a running app.
+                                Without it, shebang counts down 3 seconds and captures the
+                                frontmost app: switch to the target app during the countdown.
 
         Run options:
           --dry-run             Simulate actions; no clicks or keystrokes are sent

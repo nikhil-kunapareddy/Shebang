@@ -1,6 +1,6 @@
 import Foundation
 
-/// One JSONL line in the local audit log. Keys match the Windows build.
+/// One JSONL line in the local audit log; property names are the JSON keys.
 public struct AuditLogEntry: Sendable, Equatable, Codable {
     public var timestamp: Date
     public var goal: String

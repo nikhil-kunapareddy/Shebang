@@ -1,15 +1,9 @@
 import Foundation
 import ShebangCore
 
-/// Asks for approval of a risky action on the terminal (port of the Windows `ConsoleConfirmationPrompt`).
+/// Asks for approval of a risky action on the terminal (`run --confirm-risky`).
 /// Anything but `y`/`yes` rejects, as do end of input and a cancelled run.
 final class ConsoleConfirmationPrompt: ConfirmationPrompt {
-    private let autoApprove: Bool?
-
-    init(autoApprove: Bool? = nil) {
-        self.autoApprove = autoApprove
-    }
-
     func requestConfirmation(
         decision: AgentDecision,
         target: AccessibilityElement?,
@@ -31,11 +25,6 @@ final class ConsoleConfirmationPrompt: ConfirmationPrompt {
         Console.line("App:        \(app.processName) - \"\(app.windowTitle)\"")
         Console.line("Reason:     \(reason)", .red)
         Console.line(Console.rule)
-
-        if let autoApprove {
-            Console.line("Automated response: \(autoApprove ? "Y" : "N") (auto)\n")
-            return autoApprove
-        }
 
         Console.write("Do you approve executing this action? [y/N] (default: N): ", .cyan)
         guard let input = await StandardInput.readLine() else {
