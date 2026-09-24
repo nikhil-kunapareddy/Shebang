@@ -4,7 +4,7 @@ import ShebangPlatform
 
 /// `shebang run "<goal>"`: the full agent loop, wired like the app, with progress on stdout.
 enum RunCommand {
-    /// Windows CLI limits: short runs that stop quickly when the screen does not change.
+    /// CLI runs are short and stop quickly when the screen does not change.
     static let defaultMaxSteps = 10
     static let maxConsecutiveStalls = 3
 
@@ -86,7 +86,7 @@ enum RunCommand {
             let confidence = Int((decision.confidence * 100).rounded())
             Console.line("[STEP \(step)] Decision: \(decision.operation.rawValue) on '\(label)' (Conf: \(confidence)%)", .green)
             let outcome = result.success ? "SUCCESS" : "FAIL"
-            Console.line("         Action Result: \(outcome) - \(result.message ?? result.error ?? "")\n")
+            Console.line("         Action Result: \(outcome) - \(result.message ?? result.errorMessage ?? "")\n")
         }
         loop.onTargetChanged = { newTarget in
             Console.line("[TARGET] Now working in \(newTarget.processName) (\"\(newTarget.windowTitle)\")", .cyan)

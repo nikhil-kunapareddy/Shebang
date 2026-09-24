@@ -9,9 +9,9 @@ import Testing
         AgentDecision(operation: .click, targetId: id, targetLabel: label)
     }
 
-    // MARK: - Ported from Windows AgentLoopTests
+    // MARK: - Stop conditions
 
-    @Test func ex05_noChangeAfterAction_loopGuardStopsRun() async {
+    @Test func noChangeAfterAction_loopGuardStopsRun() async {
         let reader = FakeScreenReader(elements: [AccessibilityElement(id: "e1", role: "AXButton", label: "Search Button")])
         let model = FakeDecisionModel { _, _, _ in AgentDecision(operation: .click, targetId: "e1", targetLabel: "Search Button") }
         let executor = FakeActionExecutor(handler: { _, _ in .succeeded(message: "Clicked e1") })
@@ -30,7 +30,7 @@ import Testing
         #expect(clock.sleeps == [AgentLoop.stallRetryDelay])
     }
 
-    @Test func ex06_maxStepCap_stopsRun() async {
+    @Test func maxStepCap_stopsRun() async {
         let model = FakeDecisionModel { call, _, _ in AgentDecision(operation: .click, targetId: "e_\(call)", targetLabel: "Next") }
         let executor = FakeActionExecutor(handler: { _, _ in .succeeded(message: "Clicked") })
         let loop = AgentLoop(screenReader: FakeScreenReader.changing(), decisionModel: model, actionExecutor: executor,
@@ -44,7 +44,7 @@ import Testing
         #expect(executor.executed.count == 5)
     }
 
-    @Test func ex04_processMismatch_abortsMidAction() async {
+    @Test func processMismatch_abortsMidAction() async {
         let reader = FakeScreenReader(elements: [AccessibilityElement(id: "e1", role: "AXButton", label: "Btn")])
         let model = FakeDecisionModel { _, _, _ in AgentDecision(operation: .click, targetId: "e1", targetLabel: "Btn") }
         let executor = FakeActionExecutor(handler: { _, _ in
@@ -93,7 +93,7 @@ import Testing
         #expect(result.status == .completed)
         #expect(result.stepsCompleted == 2)
         #expect(model.verifyCount == 2)
-        // Like Windows, an inconclusive Done falls through to the executor.
+        // An inconclusive Done falls through to the executor.
         #expect(executor.executed.map(\.decision.operation) == [.done])
     }
 
@@ -160,7 +160,7 @@ import Testing
         #expect(statuses.contains("Step 1/3: Click on missing"))
     }
 
-    @Test func statusMessages_followWindowsWording() async {
+    @Test func statusMessages_reportEachPhase() async {
         let reader = FakeScreenReader(elements: [AccessibilityElement(id: "e1", role: "AXButton", label: "OK")])
         let model = FakeDecisionModel(script: [click("e1", "OK")])
         let loop = AgentLoop(screenReader: reader, decisionModel: model, actionExecutor: FakeActionExecutor(),
@@ -372,12 +372,11 @@ import Testing
 }
 
 @Suite struct AgentLoopOptionsTests {
-    @Test func defaultsMatchWindows() {
+    @Test func defaults() {
         let options = AgentLoopOptions()
         #expect(options.maxSteps == 0)
         #expect(options.dryRun)
         #expect(options.maxConsecutiveStalls == 15)
-        #expect(options.actionTimeoutSeconds == 10)
         #expect(options.escalateOnModelRiskScore == nil)
     }
 

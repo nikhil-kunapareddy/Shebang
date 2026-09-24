@@ -20,7 +20,7 @@ import Testing
         "",
     ])
     func rejectsNonWebURLs(_ raw: String) {
-        #expect(!UrlLauncherValidator.isValidWebURL(raw))
+        #expect(UrlLauncherValidator.validatedWebURL(raw) == nil)
     }
 
     @Test func extractsExplicitURLsAndStripsPunctuation() {

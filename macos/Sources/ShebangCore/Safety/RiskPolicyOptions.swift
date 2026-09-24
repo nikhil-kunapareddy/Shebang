@@ -1,8 +1,5 @@
 /// Settings for `DefaultRiskPolicy`. All string sets are matched case-insensitively.
 public struct RiskPolicyOptions: Sendable, Equatable {
-    /// Intentionally empty: Jarvis mode asks for no confirmation on any safe action.
-    public static let defaultSensitiveVerbs: Set<String> = []
-
     /// Only real deletion operations; matched on word boundaries in goals, labels, and typed text.
     public static let defaultProhibitedTerms: Set<String> = [
         "delete",
@@ -13,7 +10,7 @@ public struct RiskPolicyOptions: Sendable, Equatable {
         "truncate",
         "format",
         "del", // command-line deletion shorthand
-        // macOS equivalents: shell removal, Finder's Trash, and diskutil erase verbs.
+        // Shell removal, Finder's Trash, and diskutil erase verbs.
         "rm",
         "rmdir",
         "unlink",
@@ -40,26 +37,14 @@ public struct RiskPolicyOptions: Sendable, Equatable {
         "passwords", "com.apple.passwords",
     ]
 
-    /// Carried over from Windows; unused while the policy runs in Jarvis mode.
-    public var sensitiveVerbs: Set<String>
     public var prohibitedTerms: Set<String>
     public var denyListedApps: Set<String>
-    /// Carried over from Windows; model risk escalation is configured on `AgentLoopOptions`.
-    public var escalateOnRiskScore: ActionRiskScore
-    /// Disabled: no confirmation prompts for any safe action.
-    public var requireConfirmationOnSensitiveText: Bool
 
     public init(
-        sensitiveVerbs: Set<String> = RiskPolicyOptions.defaultSensitiveVerbs,
         prohibitedTerms: Set<String> = RiskPolicyOptions.defaultProhibitedTerms,
-        denyListedApps: Set<String> = RiskPolicyOptions.defaultDenyListedApps,
-        escalateOnRiskScore: ActionRiskScore = .irreversibleOrExternalEffect,
-        requireConfirmationOnSensitiveText: Bool = false
+        denyListedApps: Set<String> = RiskPolicyOptions.defaultDenyListedApps
     ) {
-        self.sensitiveVerbs = sensitiveVerbs
         self.prohibitedTerms = prohibitedTerms
         self.denyListedApps = denyListedApps
-        self.escalateOnRiskScore = escalateOnRiskScore
-        self.requireConfirmationOnSensitiveText = requireConfirmationOnSensitiveText
     }
 }

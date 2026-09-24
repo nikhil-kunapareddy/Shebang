@@ -1,10 +1,8 @@
 import Foundation
 
-/// Untyped JSON used for the free-form `state` of a request and for raw answers
-/// (the C# build uses anonymous objects and `JsonElement`).
+/// Untyped JSON used for the free-form `state` of a request and for raw answers.
 ///
-/// Object members whose value is `.null` are omitted when encoding, matching the Windows
-/// serializer's `WhenWritingNull` policy.
+/// Object members whose value is `.null` are omitted when encoding.
 public enum JevJSON: Sendable, Equatable {
     case null
     case bool(Bool)
@@ -13,12 +11,6 @@ public enum JevJSON: Sendable, Equatable {
     case string(String)
     case array([JevJSON])
     case object([String: JevJSON])
-
-    /// Converts any `Encodable` value (e.g. a typed state struct) into JSON.
-    public init<T: Encodable>(encoding value: T) throws {
-        let data = try JSONEncoder().encode(value)
-        self = try JSONDecoder().decode(JevJSON.self, from: data)
-    }
 
     public subscript(key: String) -> JevJSON? {
         if case .object(let members) = self { return members[key] }
@@ -32,11 +24,6 @@ public enum JevJSON: Sendable, Equatable {
 
     public var stringValue: String? {
         if case .string(let value) = self { return value }
-        return nil
-    }
-
-    public var boolValue: Bool? {
-        if case .bool(let value) = self { return value }
         return nil
     }
 

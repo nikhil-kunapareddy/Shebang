@@ -2,8 +2,8 @@ import Foundation
 import Testing
 @testable import ShebangCore
 
-/// Core side of Windows ConfirmationDialogTests (RS03) plus the confirmation gate that the default Jarvis
-/// policy never triggers: custom policies and opt-in model risk escalation (Jev call B) still reach it.
+/// The confirmation gate, which the default policy never triggers: custom policies and opt-in model risk
+/// escalation (Jev call B) still reach it.
 @Suite struct ConfirmationFlowTests {
     let checkout = AppTarget.fake(pid: 4444, name: "Microsoft Edge", bundleId: "com.microsoft.edgemac",
                                   title: "Checkout - Store", window: 0x4444)
@@ -29,8 +29,8 @@ import Testing
                   auditLog: audit, clock: FakeClock())
     }
 
-    // RS03: the prompt receives the exact action, target, window, and reason to display.
-    @Test func rs03_promptReceivesExactActionTargetAndWindow() async throws {
+    // The prompt receives the exact action, target, window, and reason to display.
+    @Test func promptReceivesExactActionTargetAndWindow() async throws {
         let prompt = FakeConfirmationPrompt(approve: true)
         let loop = makeLoop(prompt: prompt, policy: policyRequiringConfirmation(),
                             model: FakeDecisionModel(script: [confirmDecision]), executor: FakeActionExecutor(),

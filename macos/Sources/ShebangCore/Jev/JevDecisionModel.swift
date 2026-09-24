@@ -167,7 +167,7 @@ public final class JevDecisionModel: DecisionModel {
 
         guard let risk = response.scoreAnswer("actionRisk") else {
             if response.answers["actionRisk"] != nil {
-                // The Windows build throws on a malformed answer and falls back to ReversibleEdit.
+                // A malformed answer is treated like a failed call.
                 Log.jev.warning("Malformed actionRisk answer from Jev. Defaulting to ReversibleEdit.")
                 return .reversibleEdit
             }
@@ -306,13 +306,13 @@ public final class JevDecisionModel: DecisionModel {
 
     // MARK: - Roles
 
-    /// Windows UIA control types plus macOS AX roles, compared without the `AX` prefix.
+    /// AX roles, compared without the `AX` prefix.
     private static let clickableRoles: Set<String> = [
-        "button", "menuitem", "menubaritem", "tabitem", "hyperlink", "link", "checkbox", "radiobutton",
-        "combobox", "popupbutton", "menubutton", "listitem", "row", "cell", "disclosuretriangle", "splitbutton",
+        "button", "menuitem", "menubaritem", "link", "checkbox", "radiobutton",
+        "combobox", "popupbutton", "menubutton", "row", "cell", "disclosuretriangle",
     ]
     private static let typeableRoles: Set<String> = [
-        "edit", "document", "combobox", "textfield", "textarea", "searchfield",
+        "combobox", "textfield", "textarea", "searchfield",
     ]
     /// AX actions that make any element (e.g. a clickable web `AXGroup`) a click target.
     private static let pressActions: Set<String> = ["AXPress", "AXOpen", "AXPick"]
@@ -337,7 +337,7 @@ public final class JevDecisionModel: DecisionModel {
         literal: #"(?:write|type|enter|insert|put)\s+(?:the\s+text\s+)?(?:["']?)(.+?)(?:["']?)(?:\s+(?:in|into|there|here|on|to)\b|$|\.)"#,
         options: .caseInsensitive)
     private static let writeDestinationRegex = NSRegularExpression(
-        literal: #"\s+(?:in|into|to|on)\s+(?:notepad|textedit|notes|document|file|editor|app|browser|search|bar|box).*$"#,
+        literal: #"\s+(?:in|into|to|on)\s+(?:textedit|notes|document|file|editor|app|browser|search|bar|box).*$"#,
         options: .caseInsensitive)
     private static let searchRegex = NSRegularExpression(
         literal: #"(?:search|look\s+up|find|google|query)(?:\s+(?:for|about|on|regarding|the\s+web\s+for))?\s+(?:["']?)(.+?)(?:["']?)(?:\s+(?:on|in|using|with)\s+[a-zA-Z0-9_\-]+|\.|$|\band\b)"#,
@@ -362,7 +362,7 @@ public final class JevDecisionModel: DecisionModel {
     /// Text the user wants typed or searched: quoted text, write/type targets, search and play
     /// queries, calculations, or the whole goal when it is a short phrase. Case-insensitively unique,
     /// in discovery order.
-    public static func extractCandidatePhrases(_ goal: String) -> [String] {
+    static func extractCandidatePhrases(_ goal: String) -> [String] {
         var candidates = OrderedCaseInsensitiveSet()
 
         // 1. Quoted text: "Adele", 'Hello World'.

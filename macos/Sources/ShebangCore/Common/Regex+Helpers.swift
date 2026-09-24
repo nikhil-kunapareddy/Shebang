@@ -32,7 +32,7 @@ extension NSTextCheckingResult {
 }
 
 extension String {
-    /// Percent-encodes everything except RFC 3986 unreserved characters (matches .NET `Uri.EscapeDataString`).
+    /// Percent-encodes everything except RFC 3986 unreserved characters.
     var escapedDataString: String {
         var allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
         allowed.insert(charactersIn: "-._~")

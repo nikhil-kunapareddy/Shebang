@@ -28,7 +28,8 @@ public struct LoopGuard: Sendable {
         consecutiveStalls = 0
     }
 
-    /// Windows hashes this string with SHA-256; keeping it verbatim gives the same equality semantics without CryptoKit.
+    /// Id, role, label, value, focus, and enabled state of every element; frames are left out so layout jitter alone
+    /// does not count as progress.
     private static func signature(of elements: [AccessibilityElement]) -> String {
         var signature = ""
         for element in elements {

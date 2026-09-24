@@ -5,7 +5,7 @@ import Testing
 @Suite struct JevClientTests {
     // MARK: - Wire format
 
-    @Test func jv01RequestJSONMatchesSchema() throws {
+    @Test func requestJSONMatchesSchema() throws {
         let request = EvaluateRequest(
             model: "typesafe-ai/jev",
             state: ["goal": "search for Adele", "app": "Spotify"],
@@ -26,7 +26,7 @@ import Testing
         #expect(json.contains(#""criteria":{"click:e1":"Click search","type:e2":"Type text"}"#))
     }
 
-    @Test func nilValuesAreOmittedLikeWhenWritingNull() throws {
+    @Test func nilValuesAreOmitted() throws {
         let request = EvaluateRequest(
             model: "m",
             state: ["kept": "yes", "dropped": nil],
@@ -45,7 +45,7 @@ import Testing
         #expect(questions["done"]?.keys.sorted() == ["instructions", "type"])
         #expect(questions["pick"]?.keys.sorted() == ["criteria", "type"])
         #expect(questions["risk"]?["criteria"] as? [String] == ["low", "high"])
-        // An empty gateway object is still sent, as in the Windows build.
+        // An empty gateway object is still sent.
         #expect((object["providerOptions"] as? [String: Any])?["gateway"] as? [String: Any] != nil)
         #expect(((object["providerOptions"] as? [String: Any])?["gateway"] as? [String: Any])?.isEmpty == true)
 
@@ -65,7 +65,7 @@ import Testing
 
     // MARK: - Response parsing
 
-    @Test func jv02BooleanChoiceScoreAnswersParseCorrectly() throws {
+    @Test func booleanChoiceScoreAnswersParseCorrectly() throws {
         let response = try decodeJevResponse("""
         {
             "answers": {
@@ -98,10 +98,9 @@ import Testing
 
         #expect(response.usage?.totalTokens == 120)
         #expect(response.providerMetadata?.gateway?.cost == 0.000045)
-        #expect(response.providerMetadata?.gateway?.provider == "typesafe-ai")
     }
 
-    @Test func responseParsingIsLenientLikeTheWindowsDeserializer() throws {
+    @Test func responseParsingIsLenient() throws {
         let response = try decodeJevResponse("""
         {
             "Answers": {
@@ -125,14 +124,12 @@ import Testing
         #expect(response.booleanAnswer("missing") == nil)
         #expect(response.choiceAnswer("c") == .init(choice: "x", confidence: 0, probabilities: [:]))
         #expect(response.choiceAnswer("empty") == nil)
-        #expect(response.scoreAnswer("half")?.score == 2)  // banker's rounding, like Math.Round
+        #expect(response.scoreAnswer("half")?.score == 2)  // banker's rounding
         #expect(response.scoreAnswer("text") == .init(score: 3, probabilities: [0.1, 0.9]))
         #expect(response.scoreAnswer("noScore") == .init(score: 0, probabilities: []))
         #expect(response.scoreAnswer("flat") == nil)
+        // Numeric-string cost is accepted; unknown keys at any level are ignored.
         #expect(response.providerMetadata?.gateway?.cost == 0.0012)
-        #expect(response.providerMetadata?.gateway?.generationId == "gen_1")
-        #expect(response.providerMetadata?.gateway?.additionalData?["extra"] == .bool(true))
-        #expect(response.additionalData == ["id": "resp_1"])
         #expect(response.usage == nil)
     }
 
@@ -162,7 +159,7 @@ import Testing
     }
 
     @Test(arguments: [401, 403])
-    func jv03AuthFailuresThrowWithoutRetrying(status: Int) async throws {
+    func authFailuresThrowWithoutRetrying(status: Int) async throws {
         let stub = JevStubbedClient { _, _ in .respond(status: status, body: "Invalid API key") }
         defer { JevStubURLProtocol.unregister(host: stub.host) }
 
@@ -173,7 +170,7 @@ import Testing
         #expect(stub.clock.sleeps.isEmpty)
     }
 
-    @Test func jv04ServerErrorRetriesWithBackoffThenThrowsTransient() async throws {
+    @Test func serverErrorRetriesWithBackoffThenThrowsTransient() async throws {
         let stub = JevStubbedClient(maxRetries: 2) { _, _ in .respond(status: 500, body: "Internal server error") }
         defer { JevStubURLProtocol.unregister(host: stub.host) }
 
@@ -214,7 +211,7 @@ import Testing
         #expect(stub.route.callCount == 1)
     }
 
-    @Test func jv05CancellationIsHonouredPromptly() async throws {
+    @Test func cancellationIsHonouredPromptly() async throws {
         let stub = JevStubbedClient { _, _ in .hang }
         defer { JevStubURLProtocol.unregister(host: stub.host) }
 
@@ -254,7 +251,7 @@ import Testing
         #expect(stub.clock.sleeps.count == 2)
     }
 
-    @Test func jv06ApiKeyNeverAppearsInErrorMessages() {
+    @Test func apiKeyNeverAppearsInErrorMessages() {
         let secret = "vck_live_secret_key_abcdef123456"
         let raw = "Bearer \(secret) resulted in failure with key \(secret)"
 
@@ -285,7 +282,7 @@ import Testing
     }
 
     @Test(arguments: ["This is not valid JSON at all", "null", "", "[1, 2]", #"{"answers": []}"#])
-    func jv07MalformedJSONThrowsProtocolError(body: String) async throws {
+    func malformedJSONThrowsProtocolError(body: String) async throws {
         let stub = JevStubbedClient { _, _ in .respond(status: 200, body: body) }
         defer { JevStubURLProtocol.unregister(host: stub.host) }
 
@@ -344,7 +341,7 @@ import Testing
 
     // MARK: - Options
 
-    @Test func optionsDefaultsMatchWindowsBuild() {
+    @Test func optionsDefaults() {
         let options = JevOptions()
         #expect(options.baseURL == "https://ai-gateway.vercel.sh")
         #expect(options.modelId == "typesafe-ai/jev")
@@ -353,7 +350,6 @@ import Testing
         #expect(options.timeoutSeconds == 30)
         #expect(options.maxRetries == 4)
         #expect(options.decisionConfidenceThreshold == 0.0)
-        #expect(options.riskConfidenceThreshold == 0.70)
         #expect(JevOptions.fromEnvironment([:]) == options)
     }
 
@@ -364,14 +360,12 @@ import Testing
             "AI_GATEWAY_API_KEY": "  vck_env_key_123456789\n",
             "ZERO_DATA_RETENTION": "TRUE",
             "DECISION_CONFIDENCE_THRESHOLD": "0.55",
-            "RISK_CONFIDENCE_THRESHOLD": "0.8",
         ])
         #expect(options.baseURL == "https://gateway.example.com")
         #expect(options.modelId == "typesafe-ai/jev-next")
         #expect(options.apiKey == "vck_env_key_123456789")
         #expect(options.zeroDataRetention)
         #expect(options.decisionConfidenceThreshold == 0.55)
-        #expect(options.riskConfidenceThreshold == 0.8)
     }
 
     @Test func optionsFromEnvironmentIgnoresBlankAndInvalidValues() {
@@ -381,15 +375,7 @@ import Testing
             "AI_GATEWAY_API_KEY": " ",
             "ZERO_DATA_RETENTION": "yes",
             "DECISION_CONFIDENCE_THRESHOLD": "high",
-            "RISK_CONFIDENCE_THRESHOLD": "",
         ])
         #expect(options == JevOptions())
-    }
-
-    @Test func zeroDataRetentionAcceptsReadmeAliasButPrefersPrimaryName() {
-        #expect(JevOptions.fromEnvironment(["AI_GATEWAY_ZERO_DATA_RETENTION": "true"]).zeroDataRetention)
-        #expect(!JevOptions.fromEnvironment([
-            "ZERO_DATA_RETENTION": "false", "AI_GATEWAY_ZERO_DATA_RETENTION": "true",
-        ]).zeroDataRetention)
     }
 }

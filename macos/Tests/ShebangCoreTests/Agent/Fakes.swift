@@ -162,7 +162,7 @@ final class FakeWindowTracker: WindowTracker {
     }
 }
 
-/// Default Jarvis policy with an overridable confirmation verdict, to exercise the confirmation gate.
+/// Default policy with an overridable confirmation verdict, to exercise the confirmation gate.
 struct StubRiskPolicy: RiskPolicy {
     var base = DefaultRiskPolicy()
     var confirmation: (AgentDecision, AccessibilityElement?, AppTarget) -> String? = { _, _, _ in nil }

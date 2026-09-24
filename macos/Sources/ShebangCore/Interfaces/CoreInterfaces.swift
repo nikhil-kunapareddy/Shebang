@@ -1,7 +1,7 @@
 import Foundation
 
 // Contracts between Core, Platform, and App. Cancellation uses Swift task cancellation
-// (`Task.checkCancellation()`), replacing the CancellationToken parameters of the Windows build.
+// (`Task.checkCancellation()`).
 
 public protocol ScreenReader: AnyObject {
     func readElements(target: AppTarget) async throws -> [AccessibilityElement]
@@ -39,10 +39,6 @@ public protocol ActionExecutor: AnyObject {
     func execute(_ decision: AgentDecision, targetElement: AccessibilityElement?) async throws -> ActionResult
     /// Points subsequent actions at a new app/window (after OpenApp/OpenUrl or a focus switch).
     func retarget(_ target: AppTarget)
-}
-
-public extension ActionExecutor {
-    func retarget(_ target: AppTarget) {}
 }
 
 public protocol HotkeyService: AnyObject {
@@ -97,8 +93,6 @@ public protocol Clock: Sendable {
 }
 
 public protocol AppLauncher: AnyObject {
-    func extractAppLaunch(from goal: String) -> (appName: String, launchCommand: String)?
-    func extractURLLaunch(from goal: String) -> URL?
     func launchApp(named appName: String, launchCommand: String?) async throws -> AppTarget?
     func launchURL(_ url: URL) async throws -> AppTarget?
 }

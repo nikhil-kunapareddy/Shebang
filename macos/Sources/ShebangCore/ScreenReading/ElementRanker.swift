@@ -1,11 +1,11 @@
 import Foundation
 
 public enum ElementRanker {
-    /// Windows UIA control types plus macOS AX roles (compared without the `AX` prefix).
+    /// AX roles, compared without the `AX` prefix.
     private static let interactiveRoles: Set<String> = [
-        "button", "menuitem", "menubaritem", "tabitem", "hyperlink", "link", "checkbox",
-        "radiobutton", "combobox", "popupbutton", "menubutton", "listitem", "edit",
-        "textfield", "textarea", "searchfield", "document", "splitbutton", "slider",
+        "button", "menuitem", "menubaritem", "link", "checkbox",
+        "radiobutton", "combobox", "popupbutton", "menubutton",
+        "textfield", "textarea", "searchfield", "slider",
         "disclosuretriangle", "incrementor",
     ]
 
@@ -16,7 +16,7 @@ public enum ElementRanker {
             .prefix(options.maxNodes)
 
         // Priority: focused, interactive, labelled, outcome evidence, then visual order.
-        // Enumerated index keeps the sort stable like LINQ OrderBy.
+        // The enumerated index keeps the sort stable: ties keep their input order.
         let sorted = filtered.enumerated().sorted { lhs, rhs in
             let a = lhs.element, b = rhs.element
             if a.focused != b.focused { return a.focused }

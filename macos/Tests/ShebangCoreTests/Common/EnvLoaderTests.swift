@@ -5,7 +5,7 @@ import Testing
 /// Serialized because the tests mutate the process environment.
 @Suite(.serialized) final class EnvLoaderTests {
     private let directory: URL
-    private let prefix = "GH_ENVTEST_\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))_"
+    private let prefix = "SHEBANG_ENVTEST_\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))_"
 
     init() throws {
         directory = FileManager.default.temporaryDirectory
@@ -77,7 +77,7 @@ import Testing
         EnvLoader.load(searchPaths: [file])
 
         #expect(env("EXISTING") == "from-shell")
-        // Like Windows, an empty value counts as unset.
+        // An empty value counts as unset.
         #expect(env("EMPTY") == "filled")
     }
 

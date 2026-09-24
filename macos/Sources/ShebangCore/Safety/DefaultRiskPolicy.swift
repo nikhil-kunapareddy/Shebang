@@ -1,7 +1,7 @@
 import Foundation
 
-/// Jarvis-mode policy ported from Windows: every safe action runs automatically without confirmation,
-/// deletion operations are strictly prohibited, and password managers are never automated.
+/// Every safe action runs automatically without confirmation, deletion operations are strictly prohibited,
+/// and password managers are never automated.
 public struct DefaultRiskPolicy: RiskPolicy {
     public let options: RiskPolicyOptions
     private let denyList: Set<String>
@@ -34,7 +34,7 @@ public struct DefaultRiskPolicy: RiskPolicy {
         return reason
     }
 
-    /// Jarvis mode never asks for human confirmation; deletions are blocked by the prohibition checks instead.
+    /// Never asks for human confirmation; deletions are blocked by the prohibition checks instead.
     public func confirmationReason(for decision: AgentDecision, target: AccessibilityElement?, app: AppTarget) -> String? {
         nil
     }
@@ -51,7 +51,7 @@ public struct DefaultRiskPolicy: RiskPolicy {
 
     public func actionProhibitionReason(for decision: AgentDecision, target: AccessibilityElement?, goal: String) -> String? {
         var texts = [decision.targetLabel, target?.label, target?.value]
-        // Windows only inspects TypeText; TypeAndEnter is included too since it can submit a deletion command.
+        // Typed text is inspected for TypeText and for TypeAndEnter, which can submit a deletion command.
         if decision.operation == .typeText || decision.operation == .typeAndEnter {
             texts.append(decision.textValue)
         }
