@@ -3,7 +3,7 @@ import CoreGraphics
 import Foundation
 import ShebangCore
 
-/// Bounded pre-order walk of an AX subtree (document order, like UIA `FindAllDescendants`).
+/// Bounded pre-order walk of an AX subtree (document order).
 /// Limits: `maxDepth`, `maxNodes` emitted elements, `visitLimit` visited nodes, a wall-clock budget,
 /// and an early stop when the app stops answering.
 struct AXTreeWalker {

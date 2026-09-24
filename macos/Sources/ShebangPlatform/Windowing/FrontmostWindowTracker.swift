@@ -3,8 +3,7 @@ import ApplicationServices
 import Foundation
 import ShebangCore
 
-/// Captures the frontmost app/window as an `AppTarget` and tracks focus changes during a run
-/// (port of the Windows `WindowCaptureService`).
+/// Captures the frontmost app/window as an `AppTarget` and tracks focus changes during a run.
 public final class FrontmostWindowTracker: WindowTracker, @unchecked Sendable {
     /// System surfaces that are never a sensible automation target.
     static let ignoredBundleIdentifiers: Set<String> = [
@@ -43,15 +42,16 @@ public final class FrontmostWindowTracker: WindowTracker, @unchecked Sendable {
                               executablePath: app.executableURL?.path ?? "")
     }
 
-    /// The frontmost app, or — when that is Shebang itself (`excludingPID`) — the owner of the
-    /// frontmost normal window underneath it.
-    public func captureFrontmost(excludingPID: Int32 = getpid()) -> AppTarget? {
+    /// The frontmost app, or — when that is Shebang itself — the owner of the frontmost normal window
+    /// underneath it.
+    public func captureFrontmost() -> AppTarget? {
+        let ownPID = getpid()
         if let app = NSWorkspace.shared.frontmostApplication,
-           app.processIdentifier != excludingPID,
+           app.processIdentifier != ownPID,
            !Self.isIgnored(app.bundleIdentifier) {
             return target(forProcessID: app.processIdentifier)
         }
-        for window in WindowList.candidates(from: windowInfo()) where window.ownerPID != excludingPID {
+        for window in WindowList.candidates(from: windowInfo()) where window.ownerPID != ownPID {
             guard let app = NSRunningApplication(processIdentifier: window.ownerPID),
                   app.activationPolicy == .regular, !Self.isIgnored(app.bundleIdentifier) else { continue }
             return target(forProcessID: window.ownerPID)
@@ -112,8 +112,8 @@ public final class FrontmostWindowTracker: WindowTracker, @unchecked Sendable {
 
     // MARK: - Pure policy
 
-    /// macOS analogue of the Windows explorer/desktop check: Finder with no real window focused.
-    public static func isDesktopOrShell(_ target: AppTarget?) -> Bool {
+    /// Finder with no real window focused, i.e. the desktop itself (also true when no app was captured).
+    static func isFinderDesktop(_ target: AppTarget?) -> Bool {
         guard let target else { return true }
         let isFinder = target.bundleIdentifier == "com.apple.finder"
             || (target.bundleIdentifier.isEmpty && target.processName.caseInsensitiveCompare("Finder") == .orderedSame)
@@ -122,11 +122,11 @@ public final class FrontmostWindowTracker: WindowTracker, @unchecked Sendable {
         return title.isEmpty || title.caseInsensitiveCompare("Desktop") == .orderedSame
     }
 
-    /// Port of `GetActiveTarget`: follow focus from the desktop into an app, or to another window of the
-    /// same app; otherwise keep the current target (a different app taking focus is not auto-followed).
+    /// Follows focus from the Finder desktop into an app, or to another window of the same app; otherwise keeps
+    /// the current target (a different app taking focus is not auto-followed).
     static func resolveActiveTarget(current: AppTarget, frontmost: AppTarget?) -> AppTarget {
         guard let frontmost else { return current }
-        if isDesktopOrShell(current) && !isDesktopOrShell(frontmost) { return frontmost }
+        if isFinderDesktop(current) && !isFinderDesktop(frontmost) { return frontmost }
         if frontmost.processId == current.processId && isDifferentWindow(frontmost, current) { return frontmost }
         return current
     }

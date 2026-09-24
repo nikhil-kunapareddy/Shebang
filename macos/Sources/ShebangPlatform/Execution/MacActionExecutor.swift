@@ -3,7 +3,7 @@ import CoreGraphics
 import Foundation
 import ShebangCore
 
-/// Executes agent decisions against the target app (port of the Windows `ActionExecutor`).
+/// Executes agent decisions against the target app.
 /// Prefers Accessibility actions (AXPress, AXFocused + AXValue) and falls back to CGEvent input.
 /// Before any input it re-activates the target when Shebang itself holds focus, and aborts if the
 /// user has switched to a different app.
@@ -30,13 +30,8 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         lock.withLock { currentTarget }
     }
 
-    public convenience init(
-        target: AppTarget,
-        dryRun: Bool,
-        appLauncher: AppLauncher? = nil,
-        registry: AXElementRegistry = .shared
-    ) {
-        self.init(target: target, dryRun: dryRun, appLauncher: appLauncher, registry: registry,
+    public convenience init(target: AppTarget, dryRun: Bool, appLauncher: AppLauncher? = nil) {
+        self.init(target: target, dryRun: dryRun, appLauncher: appLauncher, registry: .shared,
                   ax: LiveAXBackend.shared, input: SystemInputSink(), workspace: SystemWorkspaceControl(),
                   clock: SystemClock())
     }
@@ -174,10 +169,10 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
         if frontmost == target.processId { return nil }
 
         let found = frontmost ?? 0
-        // Port of the Windows desktop-shell migration: starting from the Finder desktop, follow the app that took
-        // focus. The action was chosen from the desktop's elements, so hand the new app back to the loop, which
-        // runs its deny-list check and re-reads the screen, instead of acting on stale coordinates.
-        if FrontmostWindowTracker.isDesktopOrShell(target), found != 0, found != workspace.ownProcessID,
+        // Starting from the Finder desktop, follow the app that took focus. The action was chosen from the
+        // desktop's elements, so hand the new app back to the loop, which runs its deny-list check and re-reads
+        // the screen, instead of acting on stale coordinates.
+        if FrontmostWindowTracker.isFinderDesktop(target), found != 0, found != workspace.ownProcessID,
            let migrated = workspace.describeProcess(found) {
             Log.input.info("Foreground migrated from the desktop to \(migrated.processName, privacy: .public) (PID \(found))")
             retarget(migrated)
@@ -453,7 +448,7 @@ public final class MacActionExecutor: ActionExecutor, @unchecked Sendable {
 
     /// The AXUIElement behind `element`: the registry entry from the latest read (validated against the
     /// target process and role so a stale id is never acted on), else a hit-test at the element's centre
-    /// walking up to five ancestors, like the Windows `FromPoint` + parent walk.
+    /// that walks up to five ancestors.
     private func locate(_ element: AccessibilityElement, decision: AgentDecision) -> AXUIElement? {
         guard element.source == "accessibility" else { return nil }
         let pid = target.processId

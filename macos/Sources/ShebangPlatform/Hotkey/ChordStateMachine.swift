@@ -1,6 +1,6 @@
 import Foundation
 
-/// Pure state machine for the Control+Command modifier chord (the macOS analogue of Ctrl+Win).
+/// Pure state machine for the Control+Command modifier chord.
 /// Fires when both are held and one is released with no other key pressed in between, so
 /// shortcuts such as ⌃⌘Q, ⌃⌘Space, and ⌃⌘F keep working. Not thread-safe; feed it from one thread.
 public final class ChordStateMachine {
@@ -10,8 +10,6 @@ public final class ChordStateMachine {
         public var chordArmed: Bool
         public var interrupted: Bool
     }
-
-    public static let vkEscape = RawKeyEvent.vkEscape
 
     private var controlDown = false
     private var commandDown = false
@@ -61,14 +59,14 @@ public final class ChordStateMachine {
             return
         }
 
-        // A non-chord key while a chord modifier is held turns this into a regular shortcut.
-        // (The Windows build also latched keys typed before the chord, which swallowed the next chord.)
+        // A non-chord key while a chord modifier is held turns this into a regular shortcut. Keys typed
+        // before the chord are not remembered, so they never block it.
         if controlDown || commandDown {
             interrupted = true
             chordArmed = false
         }
 
-        if event.keyCode == Self.vkEscape && isRunActive {
+        if event.keyCode == RawKeyEvent.vkEscape && isRunActive {
             onCancel?()
         }
     }

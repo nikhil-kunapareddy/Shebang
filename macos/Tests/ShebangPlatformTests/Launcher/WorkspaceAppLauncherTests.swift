@@ -62,15 +62,15 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
     // MARK: Goal parsing
 
     @Test(arguments: [
-        ("launch notepad", "notepad"),
+        ("launch textedit", "textedit"),
         ("start calculator and calculate 5 + 5", "calculator"),
         ("open chrome and search for Adele", "chrome"),
-        ("open file explorer", "file explorer"),
-        ("open task manager", "task manager"),
+        ("open activity monitor", "activity monitor"),
+        ("open system settings", "system settings"),
         ("open blender and render", "blender"),
         ("switch to discord and send message", "discord"),
     ])
-    func AL01_extractAppLaunch_recognizesAppsWithoutHardcoding(goal: String, expected: String) throws {
+    func extractAppLaunch_recognizesAppsWithoutHardcoding(goal: String, expected: String) throws {
         let launch = try #require(launcher.extractAppLaunch(from: goal))
         #expect(launch.appName.lowercased() == expected)
     }
@@ -81,7 +81,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
         ("open vlc", "vlc"),
         ("launch blender", "blender"),
     ])
-    func AL07_extractAppLaunch_supportsUniversalApps(goal: String, expected: String) throws {
+    func extractAppLaunch_supportsUniversalApps(goal: String, expected: String) throws {
         let launch = try #require(launcher.extractAppLaunch(from: goal))
         #expect(launch.appName.lowercased() == expected)
     }
@@ -89,7 +89,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
     @Test func extractAppLaunch_resolvesInstalledAppsToBundlePaths() throws {
         #expect(launcher.extractAppLaunch(from: "open chrome and search for Adele")?.launchCommand
             == "/Applications/Google Chrome.app")
-        #expect(launcher.extractAppLaunch(from: "open task manager")?.launchCommand
+        #expect(launcher.extractAppLaunch(from: "open activity monitor")?.launchCommand
             == "/System/Applications/Utilities/Activity Monitor.app")
         // Not installed: the name is kept and resolved again at launch time.
         #expect(launcher.extractAppLaunch(from: "launch blender")?.launchCommand == "blender")
@@ -101,12 +101,12 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
         #expect(launcher.extractAppLaunch(from: "type hello world") == nil)
     }
 
-    @Test func AL03_extractURLLaunch_extractsHttpAndHttpsURLs() {
+    @Test func extractURLLaunch_extractsHttpAndHttpsURLs() {
         let url = launcher.extractURLLaunch(from: "open https://github.com/nikhil-kunapareddy/Shebang to check release")
         #expect(url?.absoluteString == "https://github.com/nikhil-kunapareddy/Shebang")
     }
 
-    @Test func AL04_candidates_includeOpenAppWhenPresentInGoal() {
+    @Test func candidates_includeOpenAppWhenPresentInGoal() {
         #expect(WorkspaceAppLauncher.extractAppLaunchCandidates("open obsidian").contains { $0.lowercased() == "obsidian" })
         #expect(WorkspaceAppLauncher.extractAppLaunchCandidates("open file").isEmpty)
         #expect(WorkspaceAppLauncher.extractAppLaunchCandidates("").isEmpty)
@@ -123,7 +123,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
         ("open github.com", "github.com", ""),
         ("visit wikipedia.org", "wikipedia.org", ""),
     ])
-    func AL06_extractURLLaunch_synthesizesWebSearchesAndSites(goal: String, host: String, query: String) throws {
+    func extractURLLaunch_synthesizesWebSearchesAndSites(goal: String, host: String, query: String) throws {
         let url = try #require(launcher.extractURLLaunch(from: goal))
         #expect(url.host?.contains(host) == true)
         if !query.isEmpty {
@@ -140,10 +140,9 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
         ("CALCULATOR", "Calculator"),
         ("rechner", "Calculator"),
         ("calc", "Calculator"),
-        ("file explorer", "Finder"),
-        ("task manager", "Activity Monitor"),
+        ("finder", "Finder"),
         ("settings", "System Settings"),
-        ("notepad", "TextEdit"),
+        ("system preferences", "System Settings"),
         ("code", "Visual Studio Code"),
         ("vs code", "Visual Studio Code"),
         ("word", "Microsoft Word"),
@@ -163,9 +162,9 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
     }
 
     @Test func installedAppNamedLikeAnAliasWinsOverTheAlias() throws {
-        directory.apps.append(FakeApplicationDirectory.app("/Applications/Notepad++.app"))
-        let url = try #require(launcher.resolveApplication(named: "notepad"))
-        #expect(url.lastPathComponent == "Notepad++.app")
+        directory.apps.append(FakeApplicationDirectory.app("/Applications/Settings.app"))
+        let url = try #require(launcher.resolveApplication(named: "settings"))
+        #expect(url.lastPathComponent == "Settings.app")
     }
 
     @Test func matchScoreOrdering() {
@@ -197,7 +196,7 @@ private final class FakeApplicationDirectory: ApplicationDirectory {
         "/Volumes/Setup/Installer.pkg",
         "/Applications/Safari.app/Contents/MacOS/Safari",
     ])
-    func AL02_maliciousCommands_areBlockedBySafetyPolicy(command: String) async {
+    func maliciousCommands_areBlockedBySafetyPolicy(command: String) async {
         do {
             _ = try await launcher.launchApp(named: "malicious", launchCommand: command)
             Issue.record("Expected '\(command)' to be blocked")
@@ -282,9 +281,8 @@ struct WorkspaceAppLauncherLiveTests {
 
     @Test(arguments: [
         ("Calculator", "Calculator"),
-        ("calc", "Calculator"),
-        ("file explorer", "Finder"),
-        ("task manager", "Activity Monitor"),
+        ("finder", "Finder"),
+        ("activity monitor", "Activity Monitor"),
         ("settings", "System Settings"),
         ("com.apple.Safari", "Safari"),
     ])

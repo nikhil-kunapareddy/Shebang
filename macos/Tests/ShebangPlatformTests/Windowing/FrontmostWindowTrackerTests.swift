@@ -9,17 +9,17 @@ import Testing
     private let safari = AppTarget(processId: 555, processName: "Safari", bundleIdentifier: "com.apple.Safari",
                                    windowTitle: "Apple", windowNumber: 41, windowBounds: CGRect(x: 0, y: 25, width: 1200, height: 800))
 
-    @Test func desktopOrShellDetection() {
-        #expect(FrontmostWindowTracker.isDesktopOrShell(nil))
-        #expect(FrontmostWindowTracker.isDesktopOrShell(finderDesktop))
+    @Test func finderDesktopDetection() {
+        #expect(FrontmostWindowTracker.isFinderDesktop(nil))
+        #expect(FrontmostWindowTracker.isFinderDesktop(finderDesktop))
         var desktop = finderDesktop
         desktop.windowTitle = "Desktop"
-        #expect(FrontmostWindowTracker.isDesktopOrShell(desktop))
+        #expect(FrontmostWindowTracker.isFinderDesktop(desktop))
         var documents = finderDesktop
         documents.windowTitle = "Documents"
-        #expect(!FrontmostWindowTracker.isDesktopOrShell(documents))
-        #expect(!FrontmostWindowTracker.isDesktopOrShell(safari))
-        #expect(FrontmostWindowTracker.isDesktopOrShell(AppTarget(processId: 300, processName: "Finder")))
+        #expect(!FrontmostWindowTracker.isFinderDesktop(documents))
+        #expect(!FrontmostWindowTracker.isFinderDesktop(safari))
+        #expect(FrontmostWindowTracker.isFinderDesktop(AppTarget(processId: 300, processName: "Finder")))
     }
 
     @Test func followsFocusFromTheDesktopIntoAnApp() {
@@ -137,7 +137,6 @@ import Testing
         #expect(WindowList.candidates(from: windows).map(\.id) == [2, 3, 5])
     }
 
-    // Ported from the original app's WindowSnapshot tests.
     @Test func selectionIgnoresFrontmostTemporaryWindow() {
         let main = WindowCandidate(id: 1, frame: CGRect(x: -1200, y: 25, width: 1200, height: 800), title: "", ownerPID: 1)
         let popup = WindowCandidate(id: 2, frame: CGRect(x: -700, y: 80, width: 200, height: 30), title: "", ownerPID: 1)

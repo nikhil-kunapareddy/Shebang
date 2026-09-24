@@ -13,7 +13,7 @@ public enum ScreenReaderError: Error, LocalizedError, Equatable {
     }
 }
 
-/// Reads the target app's focused window through the Accessibility API (port of `UiaScreenReader`).
+/// Reads the target app's focused window through the Accessibility API.
 /// Missing Accessibility permission, hung apps, and empty trees degrade to OCR or an empty list — never a crash or hang.
 public final class AXScreenReader: ScreenReader, @unchecked Sendable {
     private let options: ScreenReaderOptions
@@ -32,12 +32,8 @@ public final class AXScreenReader: ScreenReader, @unchecked Sendable {
     /// Pause before the single retry of an empty walk (fresh web tree or unresponsive app).
     var retryDelaySeconds: TimeInterval = 0.5
 
-    public convenience init(
-        options: ScreenReaderOptions = .default,
-        ocr: OCRService? = VisionOCRService(),
-        registry: AXElementRegistry = .shared
-    ) {
-        self.init(options: options, ocr: ocr, registry: registry, ax: LiveAXBackend.shared, clock: SystemClock(),
+    public convenience init(ocr: OCRService? = VisionOCRService(), registry: AXElementRegistry = .shared) {
+        self.init(options: .default, ocr: ocr, registry: registry, ax: LiveAXBackend.shared, clock: SystemClock(),
                   isChromiumBased: ChromiumDetector.isChromiumBased)
     }
 

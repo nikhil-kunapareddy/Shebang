@@ -1,7 +1,7 @@
 import Foundation
 import ShebangCore
 
-/// What the confirmation panel shows for a paused action (port of `ConfirmationDialog.SetDetails`).
+/// What the confirmation panel shows for a paused action.
 struct ConfirmationDetails: Equatable, Sendable {
     static let maxTextLength = 200
 

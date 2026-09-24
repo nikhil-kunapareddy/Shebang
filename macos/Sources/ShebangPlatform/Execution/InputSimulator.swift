@@ -4,9 +4,9 @@ import CoreGraphics
 import Foundation
 import ShebangCore
 
-/// Synthetic input via CGEvent (port of the Windows `SendInput` wrapper). Coordinates are global,
-/// top-left-origin points — the same space as AX frames. Posting requires Accessibility permission;
-/// without it every call logs and returns `false` instead of silently dropping events.
+/// Synthetic input via CGEvent. Coordinates are global, top-left-origin points — the same space as AX frames.
+/// Posting requires Accessibility permission; without it every call logs and returns `false` instead of silently
+/// dropping events.
 public enum InputSimulator {
     /// macOS virtual key codes (Carbon `kVK_*`). Letter codes are US-layout positions: use
     /// `keyCode(for:)` for shortcuts so they match the user's layout.
@@ -24,7 +24,6 @@ public enum InputSimulator {
     /// `NX_KEYTYPE_PLAY` from IOKit/hidsystem/ev_keymap.h.
     static let mediaKeyPlay: Int = 16
 
-    @discardableResult
     public static func click(at point: CGPoint) -> Bool {
         guard canPost("click"), let events = clickEvents(at: point) else { return false }
         events.move.post(tap: .cghidEventTap)
@@ -46,8 +45,7 @@ public enum InputSimulator {
 
     /// Types `text` as Unicode keyboard events, one grapheme at a time; the clipboard is never touched.
     /// `shouldContinue` runs before every character so a kill switch or focus change stops typing at once.
-    @discardableResult
-    public static func typeText(_ text: String, shouldContinue: () -> Bool = { true }) -> Bool {
+    public static func typeText(_ text: String, shouldContinue: () -> Bool) -> Bool {
         guard !text.isEmpty else { return true }
         guard canPost("typeText") else { return false }
         for character in text {
@@ -60,8 +58,7 @@ public enum InputSimulator {
         return true
     }
 
-    @discardableResult
-    public static func pressKey(_ keyCode: CGKeyCode, flags: CGEventFlags = []) -> Bool {
+    public static func pressKey(_ keyCode: CGKeyCode, flags: CGEventFlags) -> Bool {
         guard canPost("pressKey"), let (down, up) = keyEvents(keyCode, flags: flags) else { return false }
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
@@ -70,15 +67,13 @@ public enum InputSimulator {
 
     /// Positive `lines` scroll up, negative scroll down. With `point`, the event targets the window under it
     /// instead of whatever is under the mouse pointer.
-    @discardableResult
-    public static func scroll(lines: Int, at point: CGPoint? = nil) -> Bool {
+    public static func scroll(lines: Int, at point: CGPoint?) -> Bool {
         guard canPost("scroll"), let event = scrollEvent(lines: lines, at: point) else { return false }
         event.post(tap: .cghidEventTap)
         return true
     }
 
     /// Hardware Play/Pause media key (system-defined NX_KEYTYPE_PLAY event), handled by the Now Playing app.
-    @discardableResult
     public static func pressMediaPlayPause() -> Bool {
         guard canPost("pressMediaPlayPause") else { return false }
         for keyDown in [true, false] {

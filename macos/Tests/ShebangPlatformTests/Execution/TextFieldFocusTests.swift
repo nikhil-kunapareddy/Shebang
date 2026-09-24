@@ -2,7 +2,6 @@ import Foundation
 import Testing
 @testable import ShebangPlatform
 
-/// Ported from the original macOS app's TextFieldFocusTests.
 @Suite struct TextFieldFocusTests {
     private let noSleep: TextFieldFocus.Sleep = { _ in }
 

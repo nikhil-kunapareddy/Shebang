@@ -6,7 +6,7 @@ import SwiftUI
 ///
 /// The prompt can become key without activating Shebang, so typing works while the target stays the active app.
 /// On submit it is hidden and replaced by a click-through HUD that never takes focus, so it cannot intercept clicks or
-/// keystrokes meant for the target (the Windows build hid its popup during actions for the same reason).
+/// keystrokes meant for the target.
 @MainActor
 final class PromptPanelController {
     let model: PromptViewModel
@@ -34,8 +34,6 @@ final class PromptPanelController {
             self?.handleKey(command) ?? false
         }
     }
-
-    var isPromptVisible: Bool { panel.isVisible }
 
     func showPrompt(for target: AppTarget?, isDryRun: Bool) {
         cancelAutoHide()
@@ -99,12 +97,6 @@ final class PromptPanelController {
             self.hud.orderOut(nil)
             onHidden()
         }
-    }
-
-    func hideAll() {
-        cancelAutoHide()
-        hidePrompt()
-        hud.orderOut(nil)
     }
 
     // MARK: - Private

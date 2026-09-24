@@ -27,7 +27,7 @@ import Testing
         CGRect(x: 10, y: 10 + index * 30, width: 120, height: 24)
     }
 
-    // RD01 equivalent on a fake tree: controls keep raw AX roles, labels and values; passwords never appear.
+    // Controls keep raw AX roles, labels and values; secure fields never appear.
     @Test func readsControlsWithRoleLabelAndValueAndNeverPasswords() async throws {
         let ax = FakeAXBackend()
         let window = ax.window(pid: pid)
@@ -113,7 +113,7 @@ import Testing
         let elements = try await makeReader(ax, registry: registry).readElements(target: target)
 
         #expect(elements.count == 25)
-        #expect(registry.count == 25)
+        #expect(Set(elements.compactMap { registry.element(for: $0.id) }).count == 25)
         for element in elements {
             let handle = try #require(registry.element(for: element.id))
             let node = try #require(ax.node(handle))
@@ -237,7 +237,7 @@ import Testing
         #expect(ocr.calls == 1)
     }
 
-    // RD07 equivalent: an invalid target is rejected with a clear message.
+    // An invalid target is rejected with a clear message.
     @Test func invalidProcessIdIsRejected() async {
         let reader = makeReader(FakeAXBackend())
         let invalid = AppTarget(processId: 0, processName: "System", windowTitle: "Invalid")

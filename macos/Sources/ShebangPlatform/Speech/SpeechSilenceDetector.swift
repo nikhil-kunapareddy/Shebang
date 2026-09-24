@@ -1,8 +1,8 @@
 import Foundation
 
-/// Voice-activity end-pointing ported from WhisperSpeechService: once speech has been heard and the
-/// minimum recording time has passed, recording stops after `silenceDuration` of quiet; it always
-/// stops at `maxDuration`. Times are seconds on any monotonic clock.
+/// Voice-activity end-pointing: once speech has been heard and the minimum recording time has passed,
+/// recording stops after `silenceDuration` of quiet; it always stops at `maxDuration`. Times are seconds
+/// on any monotonic clock.
 public struct SpeechSilenceDetector: Sendable {
     public enum Decision: Equatable, Sendable {
         case keepRecording
@@ -10,37 +10,28 @@ public struct SpeechSilenceDetector: Sendable {
         case stopAtMaxDuration
     }
 
-    /// Trailing silence that ends a recording (C# `SilenceThresholdMs` = 1800).
+    /// Trailing silence that ends a recording.
     public static let defaultSilenceDuration: TimeInterval = 1.8
-    /// RMS below this is silence (C# `SilenceRmsThreshold` = 0.01).
+    /// RMS below this is silence.
     public static let defaultRMSThreshold: Float = 0.01
-    /// Silence detection starts only after this much recording (C# `MinRecordingMs` = 500).
+    /// Silence detection starts only after this much recording.
     public static let defaultMinRecordingDuration: TimeInterval = 0.5
-    /// Hard cap on a recording (C# 30 s timeout).
+    /// Hard cap on a recording.
     public static let defaultMaxDuration: TimeInterval = 30
 
     public let silenceDuration: TimeInterval
-    public let rmsThreshold: Float
-    public let minRecordingDuration: TimeInterval
-    public let maxDuration: TimeInterval
+    public let rmsThreshold = SpeechSilenceDetector.defaultRMSThreshold
+    public let minRecordingDuration = SpeechSilenceDetector.defaultMinRecordingDuration
+    public let maxDuration = SpeechSilenceDetector.defaultMaxDuration
 
     public private(set) var hasSpeech = false
     private let startTime: TimeInterval
     private var silenceSince: TimeInterval
 
-    public init(
-        startTime: TimeInterval,
-        silenceDuration: TimeInterval = defaultSilenceDuration,
-        rmsThreshold: Float = defaultRMSThreshold,
-        minRecordingDuration: TimeInterval = defaultMinRecordingDuration,
-        maxDuration: TimeInterval = defaultMaxDuration
-    ) {
+    public init(startTime: TimeInterval, silenceDuration: TimeInterval = defaultSilenceDuration) {
         self.startTime = startTime
         self.silenceSince = startTime
         self.silenceDuration = silenceDuration
-        self.rmsThreshold = rmsThreshold
-        self.minRecordingDuration = minRecordingDuration
-        self.maxDuration = maxDuration
     }
 
     /// Feeds the energy of one audio buffer captured at `time`.
@@ -76,11 +67,7 @@ public struct SpeechSilenceDetector: Sendable {
         return Float((sum / Double(samples.count)).squareRoot())
     }
 
-    public static func rms(_ samples: [Float]) -> Float {
-        samples.withUnsafeBufferPointer { rms($0) }
-    }
-
-    /// Root-mean-square of 16-bit PCM, normalized by 32768 as in the Windows build.
+    /// Root-mean-square of 16-bit PCM, normalized to [-1, 1] by dividing by 32768.
     public static func rms(pcm16 samples: [Int16]) -> Float {
         guard !samples.isEmpty else { return 0 }
         var sum: Double = 0

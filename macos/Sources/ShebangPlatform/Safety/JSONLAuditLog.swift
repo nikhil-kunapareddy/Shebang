@@ -1,7 +1,7 @@
 import Foundation
 import ShebangCore
 
-/// Appends one JSON object per line to `audit-YYYY-MM-DD.jsonl` (UTC date, as in the Windows build).
+/// Appends one JSON object per line to `audit-YYYY-MM-DD.jsonl` (UTC date).
 /// Free-text fields are scrubbed with `SecretSanitizer`; nil fields are omitted; writes are serialized.
 public final class JSONLAuditLog: AuditLog {
     public let directory: URL

@@ -9,8 +9,7 @@ final class MenuState: ObservableObject {
     @Published var hotkeyReady = false
 }
 
-/// Composition root (port of App.xaml.cs): hotkey → prompt → agent run, kill switch, first-run setup, and the
-/// status and API key windows.
+/// Composition root: hotkey → prompt → agent run, kill switch, first-run setup, and the status and API key windows.
 @MainActor
 final class AppCoordinator {
     static let stopTimeoutSeconds: TimeInterval = 5
@@ -271,7 +270,7 @@ final class AppCoordinator {
         }
     }
 
-    /// Windows fell back to the desktop (explorer); the macOS equivalent is Finder.
+    /// With no app captured, act on the frontmost app now, else on Finder (the desktop).
     private func fallbackTarget() -> AppTarget? {
         if let frontmost = tracker.captureFrontmost() { return frontmost }
         guard let finder = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.finder").first

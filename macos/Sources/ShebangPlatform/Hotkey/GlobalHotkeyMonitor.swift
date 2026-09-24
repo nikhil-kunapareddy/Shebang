@@ -240,19 +240,11 @@ private final class HotkeyEventTap: @unchecked Sendable {
             }
         case .keyDown, .keyUp:
             let keyCode = UInt16(truncatingIfNeeded: event.getIntegerValueField(.keyboardEventKeycode))
-            router.handle(RawKeyEvent(
-                keyCode: keyCode,
-                isKeyUp: type == .keyUp,
-                isInjected: Self.isSelfInjected(event),
-                timestampMs: event.timestamp / 1_000_000
-            ))
+            router.handle(RawKeyEvent(keyCode: keyCode, isKeyUp: type == .keyUp, isInjected: Self.isSelfInjected(event)))
         case .flagsChanged:
             let keyCode = UInt16(truncatingIfNeeded: event.getIntegerValueField(.keyboardEventKeycode))
             if let raw = RawKeyEvent.fromFlagsChanged(
-                keyCode: keyCode,
-                flags: event.flags.rawValue,
-                isInjected: Self.isSelfInjected(event),
-                timestampMs: event.timestamp / 1_000_000
+                keyCode: keyCode, flags: event.flags.rawValue, isInjected: Self.isSelfInjected(event)
             ) {
                 router.handle(raw)
             }

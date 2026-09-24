@@ -43,7 +43,7 @@ private let fieldFrame = CGRect(x: 200, y: 50, width: 300, height: 24)
 @Suite struct MacActionExecutorTests {
     // MARK: Dry run and trivial operations
 
-    // EX03: dry-run mode plans without injecting input.
+    // Dry-run mode plans without injecting input.
     @Test func dryRunDoesNotTouchTheSystem() async throws {
         let h = Harness(dryRun: true, frontmost: 9999)
         let element = AccessibilityElement(id: "btn1", role: "AXButton", label: "Submit Form", frame: buttonFrame)
@@ -85,7 +85,7 @@ private let fieldFrame = CGRect(x: 200, y: 50, width: 300, height: 24)
 
     // MARK: Focus safety
 
-    // EX04: the user switched to another app mid-run — abort without stealing focus back.
+    // The user switched to another app mid-run — abort without stealing focus back.
     @Test func foregroundChangeAbortsBeforeInput() async throws {
         let h = Harness(frontmost: 9999)
         let result = try await h.run(.pressReturn)
