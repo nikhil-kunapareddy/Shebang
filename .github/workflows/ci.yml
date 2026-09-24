@@ -27,3 +27,26 @@ jobs:
 
       - name: Run unit tests
         run: dotnet test windows/GhostHand.sln -c Release --no-build --logger "console;verbosity=normal"
+
+  test-macos:
+    runs-on: macos-15
+
+    defaults:
+      run:
+        working-directory: macos
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show Swift toolchain
+        run: swift --version
+
+      - name: Build package
+        run: swift build
+
+      - name: Run unit tests
+        run: ./Scripts/test.sh
+
+      - name: Build app bundle
+        run: ./Scripts/build-app.sh

@@ -67,3 +67,29 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+
+  build-macos:
+    runs-on: macos-15
+
+    defaults:
+      run:
+        working-directory: macos
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: ./Scripts/test.sh
+
+      - name: Build and zip GhostHand.app
+        run: ./Scripts/build-app.sh --zip
+
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            macos/dist/GhostHand-*-macos-*.zip
+            macos/dist/GhostHand-*-macos-*.zip.sha256
