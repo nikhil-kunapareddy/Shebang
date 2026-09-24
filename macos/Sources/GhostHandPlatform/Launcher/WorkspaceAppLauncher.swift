@@ -58,22 +58,12 @@ public final class WorkspaceAppLauncher: AppLauncher {
 
     // MARK: - Goal parsing
 
-    private static let appIntentRegex = launcherRegex(
-        #"(?:open|launch|start|run|switch\s+to|go\s+to|focus)\s+(?:the\s+app\s+)?([a-zA-Z0-9\-_ ]+?)(?:\s+(?:and|to|then|in|with)\b|$|\.)"#)
-
     private static let trailingAppRegex = launcherRegex(
         #"\b(?:in|using|with|on)\s+([a-zA-Z0-9\-_ ]+?)(?:\s+browser)?\s*[.!]?\s*$"#)
 
-    private static let appStopWords: Set<String> = [
-        "menu", "tab", "link", "window", "dialog", "document", "file", "page", "browser", "app", "application",
-    ]
-
-    /// Port of `JevDecisionModel.ExtractAppLaunchCandidates`: "open notepad", "switch to discord", ...
+    /// "open notepad", "switch to discord", ... — shares the decision model's parser so both agree.
     public static func extractAppLaunchCandidates(_ goal: String) -> [String] {
-        guard let app = firstCapture(appIntentRegex, in: goal)?.trimmingCharacters(in: .whitespaces),
-              !app.isEmpty, !appStopWords.contains(app.lowercased())
-        else { return [] }
-        return [app]
+        JevDecisionModel.extractAppLaunchCandidates(goal)
     }
 
     public func extractAppLaunch(from goal: String) -> (appName: String, launchCommand: String)? {
