@@ -39,7 +39,7 @@ swift build                        # debug build of the app and the ghosthand CL
 ./Scripts/build-app.sh --zip       # also write dist/GhostHand-v<version>-macos-<arch>.zip (+ .sha256)
 ```
 
-`test.sh` also works with only the Command Line Tools installed. `build-app.sh` bundles the menu bar app and the `ghosthand` CLI (`GhostHand.app/Contents/MacOS/ghosthand`).
+`test.sh` also works with only the Command Line Tools installed. `build-app.sh` bundles the menu bar app and the `ghosthand` CLI (`GhostHand.app/Contents/Helpers/ghosthand`).
 
 **Signing caveat:** `build-app.sh` signs with `SIGN_IDENTITY` if set, otherwise with the first "Developer ID Application" or "Apple Development" identity in your keychain. Without one it falls back to ad-hoc signing, which works locally but macOS forgets the Accessibility grant every time the binary changes: re-grant Accessibility after each rebuild or update (remove the old GhostHand entry and add it again). A stable identity keeps the grant:
 
@@ -97,11 +97,13 @@ When you run the `ghosthand` CLI from a terminal, macOS applies these grants to 
 4. Press **Return** to run.
 5. **Kill switch:** press **Esc** or **⌃⌘** again at any moment to cancel the run immediately.
 
-The menu bar icon is the rest of the app: its menu opens the prompt, manages the API key and permissions, and quits GhostHand.
+While a run is active, a click-through status line near the bottom of the target window shows each step.
+
+The menu bar icon (✋) offers **Run on Current App** (**Stop Run** while running), **Status & Permissions…**, **Set API Key…**, **Open Audit Log Folder**, **Launch at Login**, and **Quit GhostHand**.
 
 ### Developer CLI
 
-`ghosthand` checks your setup, shows what GhostHand perceives, and runs the agent loop from a terminal. Run it with `swift run ghosthand <command>` in `macos/`, or from the app bundle at `/Applications/GhostHand.app/Contents/MacOS/ghosthand`.
+`ghosthand` checks your setup, shows what GhostHand perceives, and runs the agent loop from a terminal. Run it with `swift run ghosthand <command>` in `macos/`, or from the app bundle at `/Applications/GhostHand.app/Contents/Helpers/ghosthand`.
 
 ```bash
 ghosthand check                                    # API key (masked), permissions, live Jev call

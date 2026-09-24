@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds dist/GhostHand.app (menu bar app + bundled `ghosthand` CLI) from the Swift package.
+# Builds dist/GhostHand.app (menu bar app + `ghosthand` CLI in Contents/Helpers) from the Swift package.
 #
 #   Scripts/build-app.sh             build and sign dist/GhostHand.app
 #   Scripts/build-app.sh --install   also replace /Applications/GhostHand.app
@@ -30,11 +30,15 @@ swift build -c release --product GhostHandApp
 swift build -c release --product ghosthand
 BIN="$(swift build -c release --show-bin-path)"
 
-APP="$ROOT/dist/GhostHand.app"
-rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+# Assemble and sign outside the source tree: iCloud-synced folders such as ~/Documents keep adding
+# Finder info to bundles, which codesign rejects.
+STAGE="$(mktemp -d -t ghosthand-app)"
+trap 'rm -rf "$STAGE"' EXIT
+APP="$STAGE/GhostHand.app"
+# The CLI lives in Helpers: on case-insensitive volumes MacOS/ghosthand would overwrite MacOS/GhostHand.
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources"
 cp "$BIN/GhostHandApp" "$APP/Contents/MacOS/GhostHand"
-cp "$BIN/ghosthand" "$APP/Contents/MacOS/ghosthand"
+cp "$BIN/ghosthand" "$APP/Contents/Helpers/ghosthand"
 cp Resources/Info.plist "$APP/Contents/Info.plist"
 cp Resources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 cp "$ROOT/../.env.example" "$APP/Contents/Resources/env.example"
@@ -55,10 +59,18 @@ else
     echo "Signing with: $IDENTITY"
 fi
 # Sign the nested CLI before the bundle that contains it.
-codesign "${SIGN_FLAGS[@]}" --sign "$IDENTITY" "$APP/Contents/MacOS/ghosthand"
+codesign "${SIGN_FLAGS[@]}" --sign "$IDENTITY" "$APP/Contents/Helpers/ghosthand"
 codesign "${SIGN_FLAGS[@]}" --sign "$IDENTITY" "$APP"
 codesign --verify --strict "$APP"
-echo "Built: $APP"
+
+mkdir -p "$ROOT/dist"
+rm -rf "$ROOT/dist/GhostHand.app"
+ditto --noextattr --norsrc "$APP" "$ROOT/dist/GhostHand.app"
+echo "Built: $ROOT/dist/GhostHand.app"
+if ! codesign --verify --strict "$ROOT/dist/GhostHand.app" 2>/dev/null; then
+    echo "note: this folder adds Finder metadata (iCloud Drive?), so dist/GhostHand.app fails strict" \
+         "signature checks; --install and --zip use the clean staged copy." >&2
+fi
 
 if $ZIP; then
     ARCHIVE="$ROOT/dist/GhostHand-v$VERSION-macos-$ARCH.zip"
