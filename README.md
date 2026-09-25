@@ -14,7 +14,9 @@ Shebang reads the accessible UI controls of the app you are working in, picks ea
 
 ## Installation
 
-**From a release:** download `Shebang-v<version>-macos-arm64.zip` (Apple Silicon) from the [Releases](https://github.com/nikhil-kunapareddy/Shebang/releases/latest) page, unzip it, and move `Shebang.app` to `/Applications`. Release builds are not notarized; if macOS refuses to open the app, allow it under **System Settings > Privacy & Security > Open Anyway**. On an Intel Mac, build from source.
+**From a release:** download `Shebang-v<version>-macos-arm64.zip` (Apple Silicon) from the [Releases](https://github.com/nikhil-kunapareddy/Shebang/releases/latest) page, unzip it, and move `Shebang.app` to `/Applications`. Release builds are ad-hoc signed and not notarized; if macOS refuses to open the app, allow it under **System Settings > Privacy & Security > Open Anyway**, or run `xattr -dr com.apple.quarantine /Applications/Shebang.app`. On an Intel Mac, build from source.
+
+CI publishes a release automatically when a push to `main` carries a new `CFBundleShortVersionString` in `macos/Resources/Info.plist`. Every CI run (including pull requests) also attaches the zipped app as a workflow artifact, downloadable from the run's page under **Actions**.
 
 **From source:**
 

@@ -1,18 +1,32 @@
 name: CI
 
+# Every run builds and tests Shebang.app and uploads the zipped app as a workflow artifact.
+# Pushes to main (and v* tags) also publish a GitHub Release named after the version in
+# macos/Resources/Info.plist, unless that release already exists: bump
+# CFBundleShortVersionString to ship a new one.
+
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  test:
-    runs-on: macos-15
+  build:
+    runs-on: macos-26
 
     defaults:
       run:
         working-directory: macos
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - name: Checkout repository
@@ -21,11 +35,54 @@ jobs:
       - name: Show Swift toolchain
         run: swift --version
 
-      - name: Build package
-        run: swift build
+      - name: Read app version
+        id: version
+        run: echo "version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)" >> "$GITHUB_OUTPUT"
 
       - name: Run unit tests
         run: ./Scripts/test.sh
 
-      - name: Build app bundle
-        run: ./Scripts/build-app.sh
+      - name: Build and zip Shebang.app
+        run: ./Scripts/build-app.sh --zip
+
+      # Upload the ditto zip rather than the .app: artifacts drop executable bits and symlinks.
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shebang-v${{ steps.version.outputs.version }}-macos-arm64
+          path: |
+            macos/dist/Shebang-*-macos-*.zip
+            macos/dist/Shebang-*-macos-*.zip.sha256
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      TAG: v${{ needs.build.outputs.version }}
+
+    steps:
+      - name: Download app artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Shebang-v${{ needs.build.outputs.version }}-macos-arm64
+          path: dist
+
+      - name: Publish GitHub Release
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == tag && "$GITHUB_REF_NAME" != "$TAG" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match Info.plist version $TAG."
+            exit 1
+          fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::notice::Release $TAG already exists. Bump CFBundleShortVersionString in macos/Resources/Info.plist to publish a new one."
+            exit 0
+          fi
+          gh release create "$TAG" dist/* --target "$GITHUB_SHA" --title "Shebang $TAG" --generate-notes --latest
