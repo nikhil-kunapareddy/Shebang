@@ -82,9 +82,9 @@ import Testing
     }
 
     // A known bitmap yields text, role, source, and screen-space bounds.
-    @Test func recognizesRenderedTextAndMapsToScreen() throws {
+    @Test func recognizesRenderedTextAndMapsToScreen() async throws {
         let window = CGRect(x: -1000, y: 200, width: 600, height: 200)
-        let results = try VisionOCRService().recognizeText(in: try render("Shebang Test", size: window.size, scale: 1),
+        let results = try await VisionOCRService().recognizeText(in: try render("Shebang Test", size: window.size, scale: 1),
                                                            windowFrame: window)
         let text = try #require(results.first { $0.label.contains("Shebang") })
         #expect(text.role == "OCRText")
@@ -97,20 +97,20 @@ import Testing
         #expect(text.frame.minY > window.minY + 50 && text.frame.maxY < window.minY + 135)
     }
 
-    @Test func retinaCaptureMapsToSamePoints() throws {
+    @Test func retinaCaptureMapsToSamePoints() async throws {
         let window = CGRect(x: 300, y: 100, width: 600, height: 200)
         let service = VisionOCRService()
-        let standard = try service.recognizeText(in: try render("Retina Check", size: window.size, scale: 1), windowFrame: window)
-        let retina = try service.recognizeText(in: try render("Retina Check", size: window.size, scale: 2), windowFrame: window)
+        let standard = try await service.recognizeText(in: try render("Retina Check", size: window.size, scale: 1), windowFrame: window)
+        let retina = try await service.recognizeText(in: try render("Retina Check", size: window.size, scale: 2), windowFrame: window)
         let a = try #require(standard.first { $0.label.contains("Retina") }).frame
         let b = try #require(retina.first { $0.label.contains("Retina") }).frame
         #expect(abs(a.midX - b.midX) < 6)
         #expect(abs(a.midY - b.midY) < 6)
     }
 
-    @Test func recognizedSecretsAreSanitized() throws {
+    @Test func recognizedSecretsAreSanitized() async throws {
         let window = CGRect(x: 0, y: 0, width: 900, height: 200)
-        let results = try VisionOCRService().recognizeText(in: try render("4111 2222 3333 4444", size: window.size, scale: 2),
+        let results = try await VisionOCRService().recognizeText(in: try render("4111 2222 3333 4444", size: window.size, scale: 2),
                                                            windowFrame: window)
         #expect(!results.contains { $0.label.contains("4111 2222 3333 4444") })
     }

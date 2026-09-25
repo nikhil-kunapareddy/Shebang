@@ -20,6 +20,7 @@ concurrency:
 jobs:
   build:
     runs-on: macos-26
+    timeout-minutes: 20
 
     defaults:
       run:
@@ -39,8 +40,12 @@ jobs:
         id: version
         run: echo "version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)" >> "$GITHUB_OUTPUT"
 
+      # A one-thread concurrency pool makes code that blocks the pool deadlock on every runner, not
+      # only on runners with few cores.
       - name: Run unit tests
         run: ./Scripts/test.sh
+        env:
+          LIBDISPATCH_COOPERATIVE_POOL_STRICT: 1
 
       - name: Build and zip Shebang.app
         run: ./Scripts/build-app.sh --zip

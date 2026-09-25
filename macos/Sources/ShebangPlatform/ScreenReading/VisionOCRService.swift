@@ -66,6 +66,9 @@ public final class VisionOCRService: OCRService, @unchecked Sendable {
     private let minimumConfidence: Float = 0.5
     private let captureTimeout: TimeInterval = 5
     private let maxObservations = 500
+    /// Vision's `perform` blocks until text recognition work it schedules on the Swift concurrency pool
+    /// finishes, so calling it from that pool deadlocks once every pool thread is inside `perform`.
+    private static let visionQueue = DispatchQueue(label: "com.shebang.mac.ocr", qos: .userInitiated, attributes: .concurrent)
 
     public init() {}
 
@@ -79,19 +82,15 @@ public final class VisionOCRService: OCRService, @unchecked Sendable {
             try await Self.captureWindow(of: target)
         }
         try Task.checkCancellation()
-        return try recognizeText(in: capture.image, windowFrame: capture.frame)
+        return try await recognizeText(in: capture.image, windowFrame: capture.frame)
     }
 
     /// Runs OCR on an image that depicts `windowFrame` (global top-left points) and maps results to screen space.
-    public func recognizeText(in image: CGImage, windowFrame: CGRect) throws -> [AccessibilityElement] {
-        let request = VNRecognizeTextRequest()
-        request.recognitionLevel = .accurate
-        request.usesLanguageCorrection = true
-        let handler = VNImageRequestHandler(cgImage: image, options: [:])
-        try handler.perform([request])
+    public func recognizeText(in image: CGImage, windowFrame: CGRect) async throws -> [AccessibilityElement] {
+        let observations = try await Self.performTextRecognition(on: image)
 
         var elements: [AccessibilityElement] = []
-        for observation in (request.results ?? []).prefix(maxObservations) {
+        for observation in observations.prefix(maxObservations) {
             guard let candidate = observation.topCandidates(1).first,
                   candidate.confidence >= minimumConfidence else { continue }
             let text = candidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -106,6 +105,22 @@ public final class VisionOCRService: OCRService, @unchecked Sendable {
         }
         Log.screen.info("OCR recognized \(elements.count) text regions")
         return elements
+    }
+
+    private static func performTextRecognition(on image: CGImage) async throws -> [VNRecognizedTextObservation] {
+        try await withCheckedThrowingContinuation { continuation in
+            visionQueue.async {
+                let request = VNRecognizeTextRequest()
+                request.recognitionLevel = .accurate
+                request.usesLanguageCorrection = true
+                do {
+                    try VNImageRequestHandler(cgImage: image, options: [:]).perform([request])
+                    continuation.resume(returning: request.results ?? [])
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
     }
 
     private struct Capture: @unchecked Sendable {
