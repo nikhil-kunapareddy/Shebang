@@ -14,9 +14,9 @@ Shebang reads the accessible UI controls of the app you are working in, picks ea
 
 ## Installation
 
-**From a release:** download `Shebang-v<version>-macos-arm64.zip` (Apple Silicon) from the [Releases](https://github.com/nikhil-kunapareddy/Shebang/releases/latest) page, unzip it, and move `Shebang.app` to `/Applications`. Release builds are ad-hoc signed and not notarized; if macOS refuses to open the app, allow it under **System Settings > Privacy & Security > Open Anyway**, or run `xattr -dr com.apple.quarantine /Applications/Shebang.app`. On an Intel Mac, build from source.
+**From a release:** download `Shebang-v<version>-macos-arm64.dmg` (Apple Silicon) from the [Releases](https://github.com/nikhil-kunapareddy/Shebang/releases/latest) page, open it, and drag **Shebang** onto the **Applications** folder. A `.zip` of the same app is attached too. Release builds are ad-hoc signed and not notarized; if macOS refuses to open the app, allow it under **System Settings > Privacy & Security > Open Anyway**, or run `xattr -dr com.apple.quarantine /Applications/Shebang.app`. On an Intel Mac, build from source.
 
-CI publishes a release automatically when a push to `main` carries a new `CFBundleShortVersionString` in `macos/Resources/Info.plist`. Every CI run (including pull requests) also attaches the zipped app as a workflow artifact, downloadable from the run's page under **Actions**.
+CI publishes a release automatically when a push to `main` carries a new `CFBundleShortVersionString` in `macos/Resources/Info.plist`. Every CI run (including pull requests) also attaches the DMG and zip as a workflow artifact, downloadable from the run's page under **Actions**.
 
 **From source:**
 
@@ -29,9 +29,10 @@ swift build                        # debug build of the app and the shebang CLI
 ./Scripts/build-app.sh             # build and sign dist/Shebang.app
 ./Scripts/build-app.sh --install   # also replace /Applications/Shebang.app
 ./Scripts/build-app.sh --zip       # also write dist/Shebang-v<version>-macos-<arch>.zip (+ .sha256)
+./Scripts/build-app.sh --dmg       # also write the drag-to-install dist/Shebang-v<version>-macos-<arch>.dmg (+ .sha256)
 ```
 
-`test.sh` also works with only the Command Line Tools installed. `build-app.sh` bundles the menu bar app and the `shebang` CLI (`Shebang.app/Contents/Helpers/shebang`). It assembles and signs the bundle in a temporary folder, because iCloud Drive (for example `~/Documents`) adds Finder metadata that code signing rejects; `--install` and `--zip` use that clean copy.
+`test.sh` also works with only the Command Line Tools installed. `build-app.sh` bundles the menu bar app and the `shebang` CLI (`Shebang.app/Contents/Helpers/shebang`). It assembles and signs the bundle in a temporary folder, because iCloud Drive (for example `~/Documents`) adds Finder metadata that code signing rejects; `--install`, `--zip`, and `--dmg` use that clean copy. `--dmg` needs [dmgbuild](https://github.com/dmgbuild/dmgbuild) (`pip install dmgbuild`, Python 3.10 or later); `Scripts/make-dmg-background.swift` redraws the DMG window background.
 
 **Signing caveat:** `build-app.sh` signs with `SIGN_IDENTITY` if set, otherwise with the first "Developer ID Application" or "Apple Development" identity in your keychain. Without one it falls back to ad-hoc signing, which works locally but macOS forgets the Accessibility grant every time the binary changes: re-grant Accessibility after each rebuild or update (remove the old Shebang entry and add it again). A stable identity keeps the grant:
 

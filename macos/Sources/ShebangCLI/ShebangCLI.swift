@@ -5,7 +5,7 @@ import ShebangPlatform
 /// Entry point: parse, load `.env`, dispatch. Exit codes: 0 success, 1 failure, 2 usage error.
 enum ShebangCLI {
     /// Used when the binary runs outside Shebang.app (e.g. `swift run shebang`).
-    static let fallbackVersion = "0.3.0"
+    static let fallbackVersion = "0.3.1"
 
     static var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? fallbackVersion
