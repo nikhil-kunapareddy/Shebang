@@ -1,6 +1,6 @@
 name: CI
 
-# Every run builds and tests Shebang.app and uploads the zipped app as a workflow artifact.
+# Every run builds and tests Shebang.app and uploads the DMG and zip as a workflow artifact.
 # Pushes to main (and v* tags) also publish a GitHub Release named after the version in
 # macos/Resources/Info.plist, unless that release already exists: bump
 # CFBundleShortVersionString to ship a new one.
@@ -47,15 +47,23 @@ jobs:
         env:
           LIBDISPATCH_COOPERATIVE_POOL_STRICT: 1
 
-      - name: Build and zip Shebang.app
-        run: ./Scripts/build-app.sh --zip
+      - name: Install dmgbuild
+        run: |
+          python3 -m venv "$RUNNER_TEMP/dmgbuild"
+          "$RUNNER_TEMP/dmgbuild/bin/pip" install --quiet 'dmgbuild==1.6.7'
+          echo "$RUNNER_TEMP/dmgbuild/bin" >> "$GITHUB_PATH"
 
-      # Upload the ditto zip rather than the .app: artifacts drop executable bits and symlinks.
+      - name: Build Shebang.app, DMG, and zip
+        run: ./Scripts/build-app.sh --zip --dmg
+
+      # Upload the DMG and ditto zip rather than the .app: artifacts drop executable bits and symlinks.
       - name: Upload app artifact
         uses: actions/upload-artifact@v4
         with:
           name: Shebang-v${{ steps.version.outputs.version }}-macos-arm64
           path: |
+            macos/dist/Shebang-*-macos-*.dmg
+            macos/dist/Shebang-*-macos-*.dmg.sha256
             macos/dist/Shebang-*-macos-*.zip
             macos/dist/Shebang-*-macos-*.zip.sha256
           if-no-files-found: error

@@ -4,6 +4,8 @@
 #   Scripts/build-app.sh             build and sign dist/Shebang.app
 #   Scripts/build-app.sh --install   also replace /Applications/Shebang.app
 #   Scripts/build-app.sh --zip       also write dist/Shebang-v<version>-macos-<arch>.zip
+#   Scripts/build-app.sh --dmg       also write dist/Shebang-v<version>-macos-<arch>.dmg (drag-to-install
+#                                    window; needs dmgbuild: pip install dmgbuild)
 #
 # Signing: SIGN_IDENTITY overrides; otherwise the first "Developer ID Application" or
 # "Apple Development" identity is used. Without one the app is ad-hoc signed, which works
@@ -14,13 +16,19 @@ ROOT="$PWD"
 
 INSTALL=false
 ZIP=false
+DMG=false
 for arg in "$@"; do
     case "$arg" in
         --install) INSTALL=true ;;
         --zip) ZIP=true ;;
-        *) echo "Usage: $0 [--install] [--zip]" >&2; exit 1 ;;
+        --dmg) DMG=true ;;
+        *) echo "Usage: $0 [--install] [--zip] [--dmg]" >&2; exit 1 ;;
     esac
 done
+if $DMG && ! command -v dmgbuild >/dev/null; then
+    echo "--dmg needs dmgbuild on PATH: pip install dmgbuild" >&2
+    exit 1
+fi
 
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info.plist)"
 ARCH="$(uname -m)"
@@ -78,6 +86,20 @@ if $ZIP; then
     ditto -c -k --sequesterRsrc --keepParent "$APP" "$ARCHIVE"
     (cd "$ROOT/dist" && shasum -a 256 "$(basename "$ARCHIVE")" > "$(basename "$ARCHIVE").sha256")
     echo "Archive: $ARCHIVE"
+fi
+
+if $DMG; then
+    IMAGE="$ROOT/dist/Shebang-v$VERSION-macos-$ARCH.dmg"
+    rm -f "$IMAGE"
+    # Retries cover hdiutil detach failing while Spotlight or XProtect still hold the volume.
+    dmgbuild -s Scripts/dmg-settings.py -D app="$APP" -D background="$ROOT/Resources/dmg-background.tiff" \
+        -D icon="$ROOT/Resources/AppIcon.icns" --detach-retries 10 Shebang "$IMAGE"
+    # A disk image carries no ad-hoc signature, so only sign it with a real identity.
+    if [[ "$IDENTITY" != "-" ]]; then
+        codesign --force --timestamp --sign "$IDENTITY" "$IMAGE"
+    fi
+    (cd "$ROOT/dist" && shasum -a 256 "$(basename "$IMAGE")" > "$(basename "$IMAGE").sha256")
+    echo "Disk image: $IMAGE"
 fi
 
 if $INSTALL; then
